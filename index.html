@@ -96,6 +96,14 @@
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .button-group-left {
+            margin-top: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
         }
         button {
             background: #1a73e8;
@@ -122,9 +130,12 @@
         button.danger:hover {
             background: #bb2d3b;
         }
+        button.success {
+            background: #28a745;
+        }
         .info-banner {
             background: #e8f0fe;
-            padding: 12px;
+            padding: 10px 15px;
             border-radius: 8px;
             margin-bottom: 20px;
             font-size: 13px;
@@ -135,6 +146,12 @@
             border-radius: 8px;
             margin: 15px 0;
             font-weight: bold;
+        }
+        .add-btn {
+            background: #28a745;
+        }
+        .add-btn:hover {
+            background: #218838;
         }
         @media (max-width: 768px) {
             .container { padding: 15px; }
@@ -222,12 +239,8 @@
         return results;
     }
     
-    // Resets detailed plan based on current staffInfo and longTermTrainings
-    // ONLY populates the array that matches the user's category
     function refreshDetailedPlan() {
-        // Clear both arrays
         detailedLongTerm = { academic: [], adminTechnical: [] };
-        
         if (!staffInfo.category || longTermTrainings.length === 0) return;
         
         const isAcademic = (staffInfo.category === 'Academic Staff');
@@ -271,7 +284,7 @@
         
         // STEP 1
         if (currentStep === 1) {
-            html += `<h2>📋 SECTION 1: STAFF INFORMATION</h2>`;
+            html += `<h2>📋 STAFF INFORMATION</h2>`;
             html += `<div class="form-group"><label>Full Name *</label><input type="text" id="staffName" value="${escapeHtml(staffInfo.name || '')}"></div>`;
             html += `<div class="form-group"><label>Gender *</label><select id="gender"><option value="">Select</option><option ${staffInfo.gender === 'Male' ? 'selected' : ''}>Male</option><option ${staffInfo.gender === 'Female' ? 'selected' : ''}>Female</option></select></div>`;
             html += `<div class="form-group"><label>Staff Category *</label><select id="category"><option value="">Select</option><option ${staffInfo.category === 'Academic Staff' ? 'selected' : ''}>Academic Staff</option><option ${staffInfo.category === 'Administrative Staff' ? 'selected' : ''}>Administrative Staff</option><option ${staffInfo.category === 'Technical Staff' ? 'selected' : ''}>Technical Staff</option></select></div>`;
@@ -281,7 +294,7 @@
         
         // STEP 2: Long-Term Training
         else if (currentStep === 2) {
-            html += `<h2>📚 SECTION 2A: LONG-TERM TRAINING NEEDS (4a)</h2>`;
+            html += `<h2>📚 LONG-TERM TRAINING NEEDS</h2>`;
             html += `<div class="info-banner">Examples: Certificate, Diploma, Postgraduate Diploma, Bachelor's Degree, Master's Degree, PhD</div>`;
             html += `<table><thead><tr><th>S/N</th><th>Training Area</th><th>2026/27</th><th>2027/28</th><th>2028/29</th><th>Duration (Months)</th><th>Expected Outcome</th><th>Remarks</th><th></th></tr></thead><tbody id="longTermTableBody">`;
             for (let i = 0; i < longTermTrainings.length; i++) {
@@ -299,13 +312,13 @@
                 </tr>`;
             }
             html += `</tbody></table>`;
-            html += `<div class="button-group"><button onclick="addLongTermRow()">+ Add Another Training</button></div>`;
-            html += `<div class="button-group"><button onclick="goToStep3()">Next → Short-Term Training</button><button class="secondary" onclick="goToStep(1)">← Back</button></div>`;
+            html += `<div class="button-group-left"><button class="add-btn" onclick="addLongTermRow()">+ Add Training</button></div>`;
+            html += `<div class="button-group"><button onclick="goToStep3()">Next →</button><button class="secondary" onclick="goToStep(1)">← Back</button></div>`;
         }
         
         // STEP 3: Short-Term Training
         else if (currentStep === 3) {
-            html += `<h2>🛠️ SECTION 2B: SHORT-TERM TRAINING NEEDS (4b)</h2>`;
+            html += `<h2>🛠️ SHORT-TERM TRAINING NEEDS</h2>`;
             html += `<div class="info-banner">Examples: Research Grant Writing, Data Analysis, Teaching Pedagogy, ICT Skills, AI, Leadership, Customer Care</div>`;
             html += `<table><thead><tr><th>S/N</th><th>Training Area</th><th>2026/27</th><th>2027/28</th><th>2028/29</th><th>Expected Outcome</th><th>Remarks</th><th></th></tr></thead><tbody id="shortTermTableBody">`;
             for (let i = 0; i < shortTermTrainings.length; i++) {
@@ -321,37 +334,37 @@
                     <td><button class="danger" onclick="removeShortTerm(${i})" style="padding:4px 8px">✗</button></td>
                 </tr>`;
             }
-            html += `</tbody></table>`;
-            html += `<div class="button-group"><button onclick="addShortTermRow()">+ Add Another Training</button></div>`;
+            html += `</tbody></td>`;
+            html += `<div class="button-group-left"><button class="add-btn" onclick="addShortTermRow()">+ Add Training</button></div>`;
             
             if (longTermTrainings.length > 0) {
-                html += `<div class="button-group"><button onclick="goToStep4()">Next → Detailed Financial Plan</button><button class="secondary" onclick="goToStep(2)">← Back</button></div>`;
+                html += `<div class="button-group"><button onclick="goToStep4()">Next →</button><button class="secondary" onclick="goToStep(2)">← Back</button></div>`;
             } else {
-                html += `<div class="button-group"><button onclick="submitOnlyShortTerm()" ${isSubmitting ? 'disabled' : ''}>✓ SUBMIT (No Long-Term Training)</button><button class="secondary" onclick="goToStep(2)">← Back</button></div>`;
+                html += `<div class="button-group"><button class="success" onclick="submitOnlyShortTerm()" ${isSubmitting ? 'disabled' : ''}>✓ SUBMIT</button><button class="secondary" onclick="goToStep(2)">← Back</button></div>`;
             }
         }
         
-        // STEP 4: Detailed Plan (ONLY ONE SECTION BASED ON CATEGORY)
+        // STEP 4: Detailed Plan
         else if (currentStep === 4 && longTermTrainings.length > 0) {
-            refreshDetailedPlan(); // ensures data matches current staffInfo & trainings
+            refreshDetailedPlan();
             
             const isAcademic = (staffInfo.category === 'Academic Staff');
             const isAdminTech = (staffInfo.category === 'Administrative Staff' || staffInfo.category === 'Technical Staff');
             
-            html += `<h2>💰 SECTION 3: DETAILED LONG-TERM FINANCIAL PLAN</h2>`;
-            html += `<div class="info-banner"><strong>Note:</strong> Name, Gender, Position, Course, Duration and Start Year are auto-synced and read-only. You can edit Institution, Sponsor, Yearly Tuition, Yearly Other and Remarks.</div>`;
+            html += `<h2>💰 DETAILED FINANCIAL PLAN</h2>`;
             
             let totalCost = 0;
             
-            // ONLY ACADEMIC SECTION
+            // ACADEMIC SECTION
             if (isAcademic) {
+                html += `<h3>ACADEMIC STAFF</h3>`;
                 if (detailedLongTerm.academic.length > 0) {
-                    html += `<h3>SECTION I: ACADEMIC STAFF</h3><table><thead><tr>
+                    html += `<tr><thead>；
                         <th>S/N</th><th>Name</th><th>Gender</th><th>Position</th><th>Course</th>
                         <th>Institution</th><th>Sponsor</th><th>Duration(m)</th>
-                        <th>Yearly Tuition(TZS)</th><th>Yearly Other(TZS)</th>
+                        <th>Yearly Tuition</th><th>Yearly Other</th>
                         <th>Year 1</th><th>Year 2</th><th>Year 3</th><th>Year 4</th>
-                        <th>Total(TZS)</th><th>Start Year</th><th>Remarks</th><th></th>
+                        <th>Total</th><th>Start Year</th><th>Remarks</th><th></th>
                     </tr></thead><tbody>`;
                     
                     for (let i = 0; i < detailedLongTerm.academic.length; i++) {
@@ -365,15 +378,15 @@
                         
                         html += `<tr>
                             <td>${i+1}</td>
-                            <td><input type="text" value="${escapeHtml(a.name)}" readonly style="width:120px"></td>
-                            <td><input type="text" value="${a.gender === 'M' ? 'Male' : 'Female'}" readonly style="width:70px"></td>
-                            <td><input type="text" value="${escapeHtml(a.position)}" readonly style="width:100px"></td>
-                            <td><input type="text" value="${escapeHtml(a.course)}" readonly style="width:150px"></td>
-                            <td><input type="text" value="${escapeHtml(a.institution)}" onchange="updateAcademic(${i}, 'institution', this.value)" style="width:100px"></td>
+                            <td><input type="text" value="${escapeHtml(a.name)}" readonly style="width:100px"></td>
+                            <td><input type="text" value="${a.gender === 'M' ? 'Male' : 'Female'}" readonly style="width:60px"></td>
+                            <td><input type="text" value="${escapeHtml(a.position)}" readonly style="width:90px"></td>
+                            <td><input type="text" value="${escapeHtml(a.course)}" readonly style="width:130px"></td>
+                            <td><input type="text" value="${escapeHtml(a.institution)}" onchange="updateAcademic(${i}, 'institution', this.value)" style="width:90px"></td>
                             <td><select onchange="updateAcademic(${i}, 'sponsor', this.value)"><option ${a.sponsor === 'UDSM' ? 'selected' : ''}>UDSM</option><option ${a.sponsor === 'NIF' ? 'selected' : ''}>NIF</option><option ${a.sponsor === 'Secure D' ? 'selected' : ''}>Secure D</option><option ${a.sponsor === 'Other' ? 'selected' : ''}>Other</option></select></td>
-                            <td><input type="number" value="${a.duration || ''}" readonly style="width:70px"></td>
-                            <td><input type="number" value="${a.yearlyTuition || DEFAULT_YEARLY_TUITION}" onchange="updateAcademic(${i}, 'yearlyTuition', this.value)" style="width:100px"></td>
-                            <td><input type="number" value="${a.yearlyOther || DEFAULT_YEARLY_OTHER_COSTS}" onchange="updateAcademic(${i}, 'yearlyOther', this.value)" style="width:100px"></td>`;
+                            <td><input type="number" value="${a.duration || ''}" readonly style="width:60px"></td>
+                            <td><input type="number" value="${a.yearlyTuition || DEFAULT_YEARLY_TUITION}" onchange="updateAcademic(${i}, 'yearlyTuition', this.value)" style="width:90px"></td>
+                            <td><input type="number" value="${a.yearlyOther || DEFAULT_YEARLY_OTHER_COSTS}" onchange="updateAcademic(${i}, 'yearlyOther', this.value)" style="width:90px"></td>`;
                         
                         for (let y = 0; y < 4; y++) {
                             if (y < costs.length) html += `<td>${Math.round(costs[y].cost).toLocaleString()}<br><small>(${costs[y].year})</small></td>`;
@@ -382,27 +395,28 @@
                         
                         html += `<td><strong>${Math.round(rowTotal).toLocaleString()}</strong></td>
                             <td><input type="text" value="${escapeHtml(a.year)}" readonly style="width:70px"></td>
-                            <td><input type="text" value="${escapeHtml(a.remarks)}" onchange="updateAcademic(${i}, 'remarks', this.value)" style="width:100px"></td>
+                            <td><input type="text" value="${escapeHtml(a.remarks)}" onchange="updateAcademic(${i}, 'remarks', this.value)" style="width:80px"></td>
                             <td><button class="danger" onclick="removeAcademic(${i})" style="padding:2px 6px">✗</button></td>
                         </tr>`;
                     }
                     html += `</tbody></table>`;
-                    html += `<div class="button-group"><button onclick="addAcademicRow()">+ Add Academic Staff Training</button></div>`;
+                    html += `<div class="button-group-left"><button class="add-btn" onclick="addAcademicRow()">+ Add Training</button></div>`;
                 } else {
-                    html += `<div class="info-banner">No long-term training records found. Please add trainings in Section 2A.</div>`;
+                    html += `<div class="info-banner">No long-term training records found.</div>`;
                 }
-                html += `<div class="cost-summary"><strong>A. TOTAL TRAINING COST FOR ACADEMIC STAFF:</strong> TZS ${Math.round(totalCost).toLocaleString()}</div>`;
+                html += `<div class="cost-summary"><strong>TOTAL COST FOR ACADEMIC STAFF:</strong> TZS ${Math.round(totalCost).toLocaleString()}</div>`;
             }
             
-            // ONLY ADMIN/TECHNICAL SECTION
+            // ADMIN/TECHNICAL SECTION
             else if (isAdminTech) {
+                html += `<h3>ADMINISTRATIVE & TECHNICAL STAFF</h3>`;
                 if (detailedLongTerm.adminTechnical.length > 0) {
-                    html += `<h3>SECTION II: ADMINISTRATIVE & TECHNICAL STAFF</h3><table><thead><tr>
+                    html += `<table><thead>；
                         <th>S/N</th><th>Name</th><th>Gender</th><th>Position</th><th>Course</th>
                         <th>Institution</th><th>Sponsor</th><th>Duration(m)</th>
-                        <th>Yearly Tuition(TZS)</th><th>Yearly Other(TZS)</th>
+                        <th>Yearly Tuition</th><th>Yearly Other</th>
                         <th>Year 1</th><th>Year 2</th><th>Year 3</th><th>Year 4</th>
-                        <th>Total(TZS)</th><th>Start Year</th><th>Remarks</th><th></th>
+                        <th>Total</th><th>Start Year</th><th>Remarks</th><th></th>
                     </tr></thead><tbody>`;
                     
                     for (let i = 0; i < detailedLongTerm.adminTechnical.length; i++) {
@@ -416,15 +430,15 @@
                         
                         html += `<tr>
                             <td>${i+1}</td>
-                            <td><input type="text" value="${escapeHtml(a.name)}" readonly style="width:120px"></td>
-                            <td><input type="text" value="${a.gender === 'M' ? 'Male' : 'Female'}" readonly style="width:70px"></td>
-                            <td><input type="text" value="${escapeHtml(a.position)}" readonly style="width:100px"></td>
-                            <td><input type="text" value="${escapeHtml(a.course)}" readonly style="width:150px"></td>
-                            <td><input type="text" value="${escapeHtml(a.institution)}" onchange="updateAdminTech(${i}, 'institution', this.value)" style="width:100px"></td>
+                            <td><input type="text" value="${escapeHtml(a.name)}" readonly style="width:100px"></td>
+                            <td><input type="text" value="${a.gender === 'M' ? 'Male' : 'Female'}" readonly style="width:60px"></td>
+                            <td><input type="text" value="${escapeHtml(a.position)}" readonly style="width:90px"></td>
+                            <td><input type="text" value="${escapeHtml(a.course)}" readonly style="width:130px"></td>
+                            <td><input type="text" value="${escapeHtml(a.institution)}" onchange="updateAdminTech(${i}, 'institution', this.value)" style="width:90px"></td>
                             <td><select onchange="updateAdminTech(${i}, 'sponsor', this.value)"><option ${a.sponsor === 'UDSM' ? 'selected' : ''}>UDSM</option><option ${a.sponsor === 'NIF' ? 'selected' : ''}>NIF</option><option ${a.sponsor === 'Secure D' ? 'selected' : ''}>Secure D</option><option ${a.sponsor === 'Other' ? 'selected' : ''}>Other</option></select></td>
-                            <td><input type="number" value="${a.duration || ''}" readonly style="width:70px"></td>
-                            <td><input type="number" value="${a.yearlyTuition || DEFAULT_YEARLY_TUITION}" onchange="updateAdminTech(${i}, 'yearlyTuition', this.value)" style="width:100px"></td>
-                            <td><input type="number" value="${a.yearlyOther || DEFAULT_YEARLY_OTHER_COSTS}" onchange="updateAdminTech(${i}, 'yearlyOther', this.value)" style="width:100px"></td>`;
+                            <td><input type="number" value="${a.duration || ''}" readonly style="width:60px"></td>
+                            <td><input type="number" value="${a.yearlyTuition || DEFAULT_YEARLY_TUITION}" onchange="updateAdminTech(${i}, 'yearlyTuition', this.value)" style="width:90px"></td>
+                            <td><input type="number" value="${a.yearlyOther || DEFAULT_YEARLY_OTHER_COSTS}" onchange="updateAdminTech(${i}, 'yearlyOther', this.value)" style="width:90px"></td>`;
                         
                         for (let y = 0; y < 4; y++) {
                             if (y < costs.length) html += `<td>${Math.round(costs[y].cost).toLocaleString()}<br><small>(${costs[y].year})</small></td>`;
@@ -433,19 +447,19 @@
                         
                         html += `<td><strong>${Math.round(rowTotal).toLocaleString()}</strong></td>
                             <td><input type="text" value="${escapeHtml(a.year)}" readonly style="width:70px"></td>
-                            <td><input type="text" value="${escapeHtml(a.remarks)}" onchange="updateAdminTech(${i}, 'remarks', this.value)" style="width:100px"></td>
+                            <td><input type="text" value="${escapeHtml(a.remarks)}" onchange="updateAdminTech(${i}, 'remarks', this.value)" style="width:80px"></td>
                             <td><button class="danger" onclick="removeAdminTech(${i})" style="padding:2px 6px">✗</button></td>
                         </tr>`;
                     }
                     html += `</tbody></table>`;
-                    html += `<div class="button-group"><button onclick="addAdminTechRow()">+ Add Admin/Technical Staff Training</button></div>`;
+                    html += `<div class="button-group-left"><button class="add-btn" onclick="addAdminTechRow()">+ Add Training</button></div>`;
                 } else {
-                    html += `<div class="info-banner">No long-term training records found. Please add trainings in Section 2A.</div>`;
+                    html += `<div class="info-banner">No long-term training records found.</div>`;
                 }
-                html += `<div class="cost-summary"><strong>B. TOTAL TRAINING COST FOR ADMINISTRATIVE & TECHNICAL STAFF:</strong> TZS ${Math.round(totalCost).toLocaleString()}</div>`;
+                html += `<div class="cost-summary"><strong>TOTAL COST FOR ADMINISTRATIVE & TECHNICAL STAFF:</strong> TZS ${Math.round(totalCost).toLocaleString()}</div>`;
             }
             
-            html += `<div class="button-group"><button onclick="submitAllData()" ${isSubmitting ? 'disabled' : ''}>✓ SUBMIT ALL TRAINING NEEDS</button><button class="secondary" onclick="goToStep(3)">← Back</button></div>`;
+            html += `<div class="button-group"><button class="success" onclick="submitAllData()" ${isSubmitting ? 'disabled' : ''}>✓ SUBMIT</button><button class="secondary" onclick="goToStep(3)">← Back</button></div>`;
         }
         
         container.innerHTML = html;
@@ -476,7 +490,7 @@
     }
     
     function goToStep3() {
-        if (longTermTrainings.length === 0) showMessage('You have no long-term trainings. You can skip to submit on the next page.', true);
+        if (longTermTrainings.length === 0) showMessage('You have no long-term trainings.', true);
         currentStep = 3;
         render();
     }
