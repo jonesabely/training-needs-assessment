@@ -3,31 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Training Needs Assessment</title>
+    <title>University Staff Training Needs Assessment</title>
     <style>
         * { box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f0f2f5;
+            margin: 0;
+            padding: 20px;
         }
         .container {
+            max-width: 1200px;
+            margin: 0 auto;
             background: white;
             border-radius: 16px;
             padding: 30px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; font-weight: 600; margin-bottom: 8px; color: #1a1a2e; }
+        h1 {
+            color: #1a73e8;
+            border-bottom: 3px solid #1a73e8;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        h2 {
+            background: #1a73e8;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 18px;
+            margin: 20px 0 15px 0;
+        }
+        h3 {
+            color: #1a73e8;
+            border-left: 4px solid #1a73e8;
+            padding-left: 12px;
+            margin: 20px 0 15px 0;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
         input, select, textarea {
             width: 100%;
-            padding: 12px;
+            padding: 10px 12px;
             border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 6px;
+            font-size: 14px;
             font-family: inherit;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 13px;
+            overflow-x: auto;
+            display: block;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: #1a73e8;
+            color: white;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        .summary-table {
+            background: #e8f0fe;
+            margin-top: 20px;
         }
         button {
             background: #1a73e8;
@@ -39,64 +98,42 @@
             font-size: 16px;
             font-weight: 600;
             margin-right: 10px;
-            transition: background 0.2s;
+            margin-top: 10px;
         }
-        button:hover { background: #1557b0; }
-        button.secondary { background: #5f6368; }
-        button.secondary:hover { background: #3c4043; }
-        .training-entry {
+        button:hover {
+            background: #1557b0;
+        }
+        button.secondary {
+            background: #5f6368;
+        }
+        button.secondary:hover {
+            background: #3c4043;
+        }
+        button.danger {
+            background: #dc3545;
+        }
+        button.danger:hover {
+            background: #bb2d3b;
+        }
+        .training-card {
             background: #f8f9fa;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border-left: 4px solid #1a73e8;
-        }
-        .summary {
-            background: #e8f0fe;
-            padding: 15px;
+            border: 1px solid #e0e0e0;
             border-radius: 8px;
-            margin-bottom: 20px;
+            padding: 15px;
+            margin-bottom: 15px;
         }
-        .progress {
-            background: #e0e0e0;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            overflow: hidden;
-        }
-        .progress-bar {
-            background: #1a73e8;
-            height: 8px;
-            width: 0%;
-            transition: width 0.3s;
-        }
-        .step-indicator {
+        .row {
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 30px;
+            gap: 15px;
             flex-wrap: wrap;
-            gap: 5px;
+            margin-bottom: 10px;
         }
-        .step {
+        .row .form-group {
             flex: 1;
-            text-align: center;
-            padding: 8px;
-            font-size: 12px;
-            color: #999;
-            border-radius: 20px;
+            margin-bottom: 0;
         }
-        .step.active { background: #1a73e8; color: white; }
-        .step.completed { background: #34a853; color: white; }
-        .training-count {
-            background: #1a73e8;
-            color: white;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            margin-right: 10px;
+        .hidden {
+            display: none;
         }
         .success-message {
             background: #d4edda;
@@ -114,173 +151,58 @@
             margin-bottom: 20px;
             border-left: 4px solid #dc3545;
         }
-        @media (max-width: 600px) {
-            .container { padding: 20px; }
-            .step { font-size: 10px; }
+        .section-header {
+            background: #e8f0fe;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 20px 0 10px 0;
+            font-weight: bold;
+        }
+        hr {
+            margin: 25px 0;
+        }
+        .other-text {
+            margin-top: 10px;
+        }
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .row { flex-direction: column; gap: 10px; }
+            th, td { font-size: 11px; padding: 5px; }
         }
     </style>
 </head>
 <body>
-<div class="container" id="app"></div>
+<div class="container" id="app">
+    <h1>🏫 STAFF TRAINING NEEDS ASSESSMENT</h1>
+    <div id="formContent"></div>
+</div>
 
 <script>
     // ============================================
-    // YOUR GOOGLE APPS SCRIPT WEB APP URL
+    // CONFIGURATION
     // ============================================
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyxAwihxnxtDa5eAtdbHjHRP9dkQKPw0KtmpfNNEamquqiU3l3eUtMDs_5HoE2h8CK-ig/exec';
     
     // ============================================
     // STATE MANAGEMENT
     // ============================================
-    let step = 1;
+    let currentStep = 1;
     let staffInfo = {};
     let longTermTrainings = [];
     let shortTermTrainings = [];
+    let detailedLongTerm = {
+        academic: [],
+        adminTechnical: []
+    };
     let isSubmitting = false;
     
-    // ============================================
-    // RENDER FUNCTION
-    // ============================================
-    function render() {
-        const app = document.getElementById('app');
-        if (!app) return;
-        
-        let html = '';
-        
-        // Progress Bar
-        const totalSteps = 8;
-        const progressPercent = ((step - 1) / totalSteps) * 100;
-        html += `<div class="progress"><div class="progress-bar" style="width: ${progressPercent}%"></div></div>`;
-        
-        // Step Indicator
-        html += `<div class="step-indicator">`;
-        const steps = ['Staff', 'Long Need', 'Long Entry', 'Add More?', 'Short Need', 'Short Entry', 'Add More?', 'Submit'];
-        steps.forEach((s, i) => {
-            const stepNum = i + 1;
-            let stepClass = '';
-            if (stepNum === step) stepClass = 'active';
-            else if (stepNum < step) stepClass = 'completed';
-            html += `<div class="step ${stepClass}">${stepNum}. ${s}</div>`;
-        });
-        html += `</div>`;
-        
-        // Step 1: Staff Information
-        if (step === 1) {
-            html += `<h2>📋 Staff Information</h2>`;
-            html += `<div class="form-group"><label>Full Name *</label><input type="text" id="staffName" value="${escapeHtml(staffInfo.name || '')}" required></div>`;
-            html += `<div class="form-group"><label>Gender *</label><select id="gender"><option value="">Select</option><option ${staffInfo.gender === 'Male' ? 'selected' : ''}>Male</option><option ${staffInfo.gender === 'Female' ? 'selected' : ''}>Female</option></select></div>`;
-            html += `<div class="form-group"><label>Staff Category *</label><select id="category"><option value="">Select</option><option ${staffInfo.category === 'Academic' ? 'selected' : ''}>Academic</option><option ${staffInfo.category === 'Administrative' ? 'selected' : ''}>Administrative</option><option ${staffInfo.category === 'Technical' ? 'selected' : ''}>Technical</option><option ${staffInfo.category === 'Research' ? 'selected' : ''}>Research</option><option ${staffInfo.category === 'Other' ? 'selected' : ''}>Other</option></select></div>`;
-            html += `<div class="form-group"><label>Department</label><input type="text" id="department" value="${escapeHtml(staffInfo.department || '')}"></div>`;
-            html += `<button onclick="saveStaffInfo()">Next →</button>`;
-        }
-        
-        // Step 2: Does staff need long-term training?
-        else if (step === 2) {
-            html += `<h2>🎓 Long-Term Training Need</h2>`;
-            html += `<p>Certificate, Diploma, Bachelor's, Master's, PhD, etc.</p>`;
-            html += `<button onclick="setLongTermNeed(true)">✓ Yes, I need long-term training</button>`;
-            html += `<button class="secondary" onclick="setLongTermNeed(false)">✗ No, skip to short-term</button>`;
-        }
-        
-        // Step 3: Enter ONE long-term training
-        else if (step === 3) {
-            const count = longTermTrainings.length + 1;
-            html += `<h2><span class="training-count">${count}</span> Long-Term Training #${count}</h2>`;
-            html += `<div class="training-entry">`;
-            html += `<div class="form-group"><label>Training Area *</label><select id="longArea"><option value="">Select</option><option>Certificate</option><option>Diploma</option><option>Bachelor's Degree</option><option>Master's Degree</option><option>PhD</option><option>Postgraduate Diploma</option><option>Other</option></select></div>`;
-            html += `<div class="form-group"><label>Proposed Year *</label><select id="longYear"><option value="">Select</option><option>2026/27</option><option>2027/28</option><option>2028/29</option></select></div>`;
-            html += `<div class="form-group"><label>Expected Outcome *</label><textarea id="longOutcome" rows="3" placeholder="What will you achieve?"></textarea></div>`;
-            html += `<div class="form-group"><label>Remarks (optional)</label><textarea id="longRemarks" rows="2" placeholder="Any additional notes?"></textarea></div>`;
-            html += `</div>`;
-            html += `<button onclick="saveLongTerm()">Save & Continue →</button>`;
-        }
-        
-        // Step 4: Ask if they want to add another long-term training
-        else if (step === 4) {
-            html += `<h2>✅ Long-Term Training Added!</h2>`;
-            html += `<div class="summary"><strong>📚 You have added ${longTermTrainings.length} long-term training(s):</strong><ul>`;
-            longTermTrainings.forEach((t, i) => {
-                html += `<li><strong>#${i+1}:</strong> ${escapeHtml(t.area)} (${escapeHtml(t.year)})</li>`;
-            });
-            html += `</ul></div>`;
-            html += `<p>Do you have another long-term training to add?</p>`;
-            html += `<button onclick="addAnotherLongTerm()">✓ Yes, add another →</button>`;
-            html += `<button class="secondary" onclick="finishLongTerm()">✗ No, go to short-term training</button>`;
-        }
-        
-        // Step 5: Does staff need short-term training?
-        else if (step === 5) {
-            html += `<h2>🛠️ Short-Term Training Need</h2>`;
-            html += `<p>Workshops, short courses, seminars, etc.</p>`;
-            html += `<button onclick="setShortTermNeed(true)">✓ Yes, I need short-term training</button>`;
-            html += `<button class="secondary" onclick="setShortTermNeed(false)">✗ No, go to submit</button>`;
-        }
-        
-        // Step 6: Enter ONE short-term training
-        else if (step === 6) {
-            const count = shortTermTrainings.length + 1;
-            html += `<h2><span class="training-count">${count}</span> Short-Term Training #${count}</h2>`;
-            html += `<div class="training-entry">`;
-            html += `<div class="form-group"><label>Training Area *</label><select id="shortArea"><option value="">Select</option><option>Research Grant Writing</option><option>Data Analysis (SPSS)</option><option>Data Analysis (R)</option><option>SmartPLS</option><option>Teaching Pedagogy</option><option>ICT Skills</option><option>Artificial Intelligence</option><option>Laboratory Management</option><option>Leadership & Management</option><option>Customer Care</option><option>Other</option></select></div>`;
-            html += `<div class="form-group"><label>Proposed Year *</label><select id="shortYear"><option value="">Select</option><option>2026/27</option><option>2027/28</option><option>2028/29</option></select></div>`;
-            html += `<div class="form-group"><label>Expected Outcome *</label><textarea id="shortOutcome" rows="3" placeholder="What will you achieve?"></textarea></div>`;
-            html += `</div>`;
-            html += `<button onclick="saveShortTerm()">Save & Continue →</button>`;
-        }
-        
-        // Step 7: Ask if they want to add another short-term training
-        else if (step === 7) {
-            html += `<h2>✅ Short-Term Training Added!</h2>`;
-            html += `<div class="summary"><strong>📚 You have added ${shortTermTrainings.length} short-term training(s):</strong><ul>`;
-            shortTermTrainings.forEach((t, i) => {
-                html += `<li><strong>#${i+1}:</strong> ${escapeHtml(t.area)} (${escapeHtml(t.year)})</li>`;
-            });
-            html += `</ul></div>`;
-            html += `<p>Do you have another short-term training to add?</p>`;
-            html += `<button onclick="addAnotherShortTerm()">✓ Yes, add another →</button>`;
-            html += `<button class="secondary" onclick="finishShortTerm()">✗ No, go to submit</button>`;
-        }
-        
-        // Step 8: Summary and Submit
-        else if (step === 8) {
-            html += `<h2>📝 Review Your Training Needs</h2>`;
-            
-            html += `<div class="summary"><strong>👤 Staff Information</strong><br>`;
-            html += `<strong>Name:</strong> ${escapeHtml(staffInfo.name)}<br>`;
-            html += `<strong>Gender:</strong> ${escapeHtml(staffInfo.gender)}<br>`;
-            html += `<strong>Category:</strong> ${escapeHtml(staffInfo.category)}<br>`;
-            html += `<strong>Department:</strong> ${escapeHtml(staffInfo.department)}</div>`;
-            
-            html += `<div class="summary"><strong>🎓 Long-Term Training (${longTermTrainings.length})</strong>`;
-            if (longTermTrainings.length === 0) {
-                html += `<br>No long-term training needs.</div>`;
-            } else {
-                html += `<ul>`;
-                longTermTrainings.forEach((t, i) => {
-                    html += `<li><strong>${i+1}.</strong> ${escapeHtml(t.area)} - ${escapeHtml(t.year)}<br><small>Outcome: ${escapeHtml(t.outcome)}</small>`;
-                    if (t.remarks) html += `<br><small>Remarks: ${escapeHtml(t.remarks)}</small>`;
-                    html += `</li>`;
-                });
-                html += `</ul></div>`;
-            }
-            
-            html += `<div class="summary"><strong>🛠️ Short-Term Training (${shortTermTrainings.length})</strong>`;
-            if (shortTermTrainings.length === 0) {
-                html += `<br>No short-term training needs.</div>`;
-            } else {
-                html += `<ul>`;
-                shortTermTrainings.forEach((t, i) => {
-                    html += `<li><strong>${i+1}.</strong> ${escapeHtml(t.area)} - ${escapeHtml(t.year)}<br><small>Outcome: ${escapeHtml(t.outcome)}</small></li>`;
-                });
-                html += `</ul></div>`;
-            }
-            
-            html += `<button onclick="submitForm()" ${isSubmitting ? 'disabled' : ''}>✓ Submit All Training Needs</button>`;
-            html += `<button class="secondary" onclick="editForm()">← Back to Edit</button>`;
-        }
-        
-        app.innerHTML = html;
-    }
+    // Training area options
+    const longTermAreas = ['Certificate', 'Diploma', 'Postgraduate Diploma', 'Bachelor\'s Degree', 'Master\'s Degree', 'PhD', 'Other'];
+    const shortTermAreas = [
+        'Research Grant Writing', 'Data Analysis (SPSS)', 'Data Analysis (R)', 'SmartPLS',
+        'Teaching Pedagogy', 'ICT Skills', 'Artificial Intelligence', 'Laboratory Management',
+        'Leadership & Management', 'Customer Care', 'Other'
+    ];
     
     // ============================================
     // HELPER FUNCTIONS
@@ -295,115 +217,302 @@
         });
     }
     
-    function showMessage(message, isError = false) {
-        const app = document.getElementById('app');
+    function showMessage(msg, isError = false) {
+        const container = document.getElementById('formContent');
         const msgDiv = document.createElement('div');
         msgDiv.className = isError ? 'error-message' : 'success-message';
-        msgDiv.textContent = message;
-        app.insertBefore(msgDiv, app.firstChild);
+        msgDiv.textContent = msg;
+        container.insertBefore(msgDiv, container.firstChild);
         setTimeout(() => msgDiv.remove(), 5000);
     }
     
     // ============================================
-    // STEP FUNCTIONS
+    // RENDER FORM
     // ============================================
-    function saveStaffInfo() {
+    function render() {
+        const container = document.getElementById('formContent');
+        if (!container) return;
+        
+        let html = '';
+        
+        // Step 1: Staff Information
+        if (currentStep === 1) {
+            html += `<h2>📋 SECTION 1: STAFF INFORMATION</h2>`;
+            html += `<div class="form-group"><label>Full Name *</label><input type="text" id="staffName" value="${escapeHtml(staffInfo.name || '')}"></div>`;
+            html += `<div class="form-group"><label>Gender *</label><select id="gender"><option value="">Select</option><option ${staffInfo.gender === 'Male' ? 'selected' : ''}>Male</option><option ${staffInfo.gender === 'Female' ? 'selected' : ''}>Female</option></select></div>`;
+            html += `<div class="form-group"><label>Staff Category *</label><select id="category"><option value="">Select</option><option ${staffInfo.category === 'Academic Staff' ? 'selected' : ''}>Academic Staff</option><option ${staffInfo.category === 'Administrative Staff' ? 'selected' : ''}>Administrative Staff</option><option ${staffInfo.category === 'Technical Staff' ? 'selected' : ''}>Technical Staff</option></select></div>`;
+            html += `<button onclick="nextToStep2()">Next →</button>`;
+        }
+        
+        // Step 2: Long-Term Training (4a) - Simple Table
+        else if (currentStep === 2) {
+            html += `<h2>📚 SECTION 2A: LONG-TERM TRAINING NEEDS (4a)</h2>`;
+            html += `<p><em>Examples: Certificate, Diploma, Postgraduate Diploma, Bachelor's Degree, Master's Degree, PhD</em></p>`;
+            html += `<table id="longTermTable">`;
+            html += `<thead><tr><th>S/N</th><th>Training Area</th><th>2026/27</th><th>2027/28</th><th>2028/29</th><th>Expected Outcome</th><th>Remarks</th><th></th></tr></thead>`;
+            html += `<tbody id="longTermTableBody">`;
+            
+            for (let i = 0; i < longTermTrainings.length; i++) {
+                const t = longTermTrainings[i];
+                html += `<tr>
+                    <td>${i+1}</td>
+                    <td><input type="text" value="${escapeHtml(t.area)}" onchange="updateLongTerm(${i}, 'area', this.value)" style="width:150px"></td>
+                    <td><input type="checkbox" ${t.y2026 ? 'checked' : ''} onchange="updateLongTerm(${i}, 'y2026', this.checked)" style="width:20px"></td>
+                    <td><input type="checkbox" ${t.y2027 ? 'checked' : ''} onchange="updateLongTerm(${i}, 'y2027', this.checked)" style="width:20px"></td>
+                    <td><input type="checkbox" ${t.y2028 ? 'checked' : ''} onchange="updateLongTerm(${i}, 'y2028', this.checked)" style="width:20px"></td>
+                    <td><input type="text" value="${escapeHtml(t.outcome)}" onchange="updateLongTerm(${i}, 'outcome', this.value)" style="width:180px"></td>
+                    <td><input type="text" value="${escapeHtml(t.remarks)}" onchange="updateLongTerm(${i}, 'remarks', this.value)" style="width:150px"></td>
+                    <td><button class="danger" onclick="removeLongTerm(${i})" style="padding:4px 8px; font-size:12px">✗</button></td>
+                </tr>`;
+            }
+            
+            html += `</tbody></table>`;
+            html += `<button onclick="addLongTermRow()">+ Add Another Training</button>`;
+            html += `<hr>`;
+            html += `<h3>Summary by Staff Category (For Dept. Head)</h3>`;
+            html += `<table class="summary-table" id="longTermSummary">`;
+            html += `<thead><tr><th>Category</th><th>Gender</th><th>Female</th><th>Male</th><th>2026/27 Total</th><th>2027/28 Total</th><th>2028/29 Total</th><th>S/N</th><th>Training Area</th></tr></thead>`;
+            html += `<tbody><tr><td colspan="9">Calculated on submission</td></tr></tbody></table>`;
+            html += `<button onclick="nextToStep3()">Next → Short-Term Training</button>`;
+            html += `<button class="secondary" onclick="goToStep(1)">← Back</button>`;
+        }
+        
+        // Step 3: Short-Term Training (4b) - Simple Table
+        else if (currentStep === 3) {
+            html += `<h2>🛠️ SECTION 2B: SHORT-TERM TRAINING NEEDS (4b)</h2>`;
+            html += `<p><em>Examples: Research Grant Writing, Data Analysis (SPSS/R/SmartPLS), Teaching Pedagogy, ICT Skills, Artificial Intelligence, Laboratory Management, Leadership & Management, Customer Care</em></p>`;
+            html += `<table id="shortTermTable">`;
+            html += `<thead><tr><th>S/N</th><th>Training Area</th><th>2026/27</th><th>2027/28</th><th>2028/29</th><th>Expected Outcome</th><th>Remarks</th><th></th></tr></thead>`;
+            html += `<tbody id="shortTermTableBody">`;
+            
+            for (let i = 0; i < shortTermTrainings.length; i++) {
+                const t = shortTermTrainings[i];
+                html += `<tr>
+                    <td>${i+1}</td>
+                    <td><input type="text" value="${escapeHtml(t.area)}" onchange="updateShortTerm(${i}, 'area', this.value)" style="width:180px"></td>
+                    <td><input type="checkbox" ${t.y2026 ? 'checked' : ''} onchange="updateShortTerm(${i}, 'y2026', this.checked)" style="width:20px"></td>
+                    <td><input type="checkbox" ${t.y2027 ? 'checked' : ''} onchange="updateShortTerm(${i}, 'y2027', this.checked)" style="width:20px"></td>
+                    <td><input type="checkbox" ${t.y2028 ? 'checked' : ''} onchange="updateShortTerm(${i}, 'y2028', this.checked)" style="width:20px"></td>
+                    <td><input type="text" value="${escapeHtml(t.outcome)}" onchange="updateShortTerm(${i}, 'outcome', this.value)" style="width:180px"></td>
+                    <td><input type="text" value="${escapeHtml(t.remarks)}" onchange="updateShortTerm(${i}, 'remarks', this.value)" style="width:150px"></td>
+                    <td><button class="danger" onclick="removeShortTerm(${i})" style="padding:4px 8px; font-size:12px">✗</button></td>
+                </tr>`;
+            }
+            
+            html += `</tbody></table>`;
+            html += `<button onclick="addShortTermRow()">+ Add Another Training</button>`;
+            html += `<button onclick="nextToStep4()">Next → Detailed Long-Term Plan</button>`;
+            html += `<button class="secondary" onclick="goToStep(2)">← Back</button>`;
+        }
+        
+        // Step 4: Detailed Long-Term Training Plan (Academic + Admin/Technical)
+        else if (currentStep === 4) {
+            html += `<h2>📖 SECTION 3: DETAILED LONG-TERM TRAINING PLAN</h2>`;
+            html += `<p><strong>Note:</strong> Tuition fees and living allowances are as per UDSM sponsorship rates. For UDSM sponsorship, long-term courses should be Master and PhD.</p>`;
+            
+            // SECTION I: ACADEMIC STAFF
+            html += `<h3>SECTION I: ACADEMIC STAFF</h3>`;
+            html += `<table id="academicTable">`;
+            html += `<thead><tr>
+                <th>S/N</th><th>Name</th><th>Gender</th><th>Position</th><th>Course/Programme</th>
+                <th>Institution</th><th>Sponsor</th><th>Duration(m)</th><th>Tuition Fee(TZS)</th>
+                <th>Other Costs(TZS)</th><th>Total(TZS)</th><th>Year of Commencement</th><th>Remarks</th><th></th>
+            </tr></thead>`;
+            html += `<tbody id="academicTableBody">`;
+            
+            for (let i = 0; i < detailedLongTerm.academic.length; i++) {
+                const a = detailedLongTerm.academic[i];
+                html += `<tr>
+                    <td>${i+1}</td>
+                    <td><input type="text" value="${escapeHtml(a.name)}" onchange="updateAcademic(${i}, 'name', this.value)" style="width:100px"></td>
+                    <td><select onchange="updateAcademic(${i}, 'gender', this.value)"><option ${a.gender === 'M' ? 'selected' : ''}>M</option><option ${a.gender === 'F' ? 'selected' : ''}>F</option></select></td>
+                    <td><input type="text" value="${escapeHtml(a.position)}" onchange="updateAcademic(${i}, 'position', this.value)" style="width:80px"></td>
+                    <td><input type="text" value="${escapeHtml(a.course)}" onchange="updateAcademic(${i}, 'course', this.value)" style="width:120px"></td>
+                    <td><input type="text" value="${escapeHtml(a.institution)}" onchange="updateAcademic(${i}, 'institution', this.value)" style="width:100px"></td>
+                    <td><select onchange="updateAcademic(${i}, 'sponsor', this.value)"><option ${a.sponsor === 'UDSM' ? 'selected' : ''}>UDSM</option><option ${a.sponsor === 'NIF' ? 'selected' : ''}>NIF</option><option ${a.sponsor === 'Secure D' ? 'selected' : ''}>Secure D</option><option ${a.sponsor === 'Other' ? 'selected' : ''}>Other</option></select></td>
+                    <td><input type="number" value="${a.duration || ''}" onchange="updateAcademic(${i}, 'duration', this.value)" style="width:60px"></td>
+                    <td><input type="number" value="${a.tuitionFee || ''}" onchange="updateAcademic(${i}, 'tuitionFee', this.value)" style="width:100px"></td>
+                    <td><input type="number" value="${a.otherCosts || ''}" onchange="updateAcademic(${i}, 'otherCosts', this.value)" style="width:100px"></td>
+                    <td><input type="number" value="${a.totalCost || ''}" onchange="updateAcademic(${i}, 'totalCost', this.value)" style="width:100px"></td>
+                    <td><input type="text" value="${escapeHtml(a.year)}" onchange="updateAcademic(${i}, 'year', this.value)" placeholder="2026/2027" style="width:90px"></td>
+                    <td><input type="text" value="${escapeHtml(a.remarks)}" onchange="updateAcademic(${i}, 'remarks', this.value)" style="width:80px"></td>
+                    <td><button class="danger" onclick="removeAcademic(${i})" style="padding:2px 6px">✗</button></td>
+                </tr>`;
+            }
+            
+            html += `</tbody></table>`;
+            html += `<button onclick="addAcademicRow()">+ Add Academic Staff Training</button>`;
+            
+            // SECTION II: ADMINISTRATIVE & TECHNICAL STAFF
+            html += `<h3>SECTION II: ADMINISTRATIVE & TECHNICAL STAFF</h3>`;
+            html += `<table id="adminTechTable">`;
+            html += `<thead><tr>
+                <th>S/N</th><th>Name</th><th>Gender</th><th>Position</th><th>Course/Programme</th>
+                <th>Institution</th><th>Sponsor</th><th>Duration(m)</th><th>Tuition Fee(TZS)</th>
+                <th>Other Costs(TZS)</th><th>Total(TZS)</th><th>Year of Commencement</th><th>Remarks</th><th></th>
+            </tr></thead>`;
+            html += `<tbody id="adminTechTableBody">`;
+            
+            for (let i = 0; i < detailedLongTerm.adminTechnical.length; i++) {
+                const at = detailedLongTerm.adminTechnical[i];
+                html += `<tr>
+                    <td>${i+1}</td>
+                    <td><input type="text" value="${escapeHtml(at.name)}" onchange="updateAdminTech(${i}, 'name', this.value)" style="width:100px"></td>
+                    <td><select onchange="updateAdminTech(${i}, 'gender', this.value)"><option ${at.gender === 'M' ? 'selected' : ''}>M</option><option ${at.gender === 'F' ? 'selected' : ''}>F</option></select></td>
+                    <td><input type="text" value="${escapeHtml(at.position)}" onchange="updateAdminTech(${i}, 'position', this.value)" style="width:80px"></td>
+                    <td><input type="text" value="${escapeHtml(at.course)}" onchange="updateAdminTech(${i}, 'course', this.value)" style="width:120px"></td>
+                    <td><input type="text" value="${escapeHtml(at.institution)}" onchange="updateAdminTech(${i}, 'institution', this.value)" style="width:100px"></td>
+                    <td><select onchange="updateAdminTech(${i}, 'sponsor', this.value)"><option ${at.sponsor === 'UDSM' ? 'selected' : ''}>UDSM</option><option ${at.sponsor === 'NIF' ? 'selected' : ''}>NIF</option><option ${at.sponsor === 'Secure D' ? 'selected' : ''}>Secure D</option><option ${at.sponsor === 'Other' ? 'selected' : ''}>Other</option></select></td>
+                    <td><input type="number" value="${at.duration || ''}" onchange="updateAdminTech(${i}, 'duration', this.value)" style="width:60px"></td>
+                    <td><input type="number" value="${at.tuitionFee || ''}" onchange="updateAdminTech(${i}, 'tuitionFee', this.value)" style="width:100px"></td>
+                    <td><input type="number" value="${at.otherCosts || ''}" onchange="updateAdminTech(${i}, 'otherCosts', this.value)" style="width:100px"></td>
+                    <td><input type="number" value="${at.totalCost || ''}" onchange="updateAdminTech(${i}, 'totalCost', this.value)" style="width:100px"></td>
+                    <td><input type="text" value="${escapeHtml(at.year)}" onchange="updateAdminTech(${i}, 'year', this.value)" placeholder="2026/2027" style="width:90px"></td>
+                    <td><input type="text" value="${escapeHtml(at.remarks)}" onchange="updateAdminTech(${i}, 'remarks', this.value)" style="width:80px"></td>
+                    <td><button class="danger" onclick="removeAdminTech(${i})" style="padding:2px 6px">✗</button></td>
+                </tr>`;
+            }
+            
+            html += `</tbody></table>`;
+            html += `<button onclick="addAdminTechRow()">+ Add Admin/Technical Staff Training</button>`;
+            
+            // Totals
+            const academicTotal = detailedLongTerm.academic.reduce((sum, a) => sum + (parseFloat(a.totalCost) || 0), 0);
+            const adminTechTotal = detailedLongTerm.adminTechnical.reduce((sum, at) => sum + (parseFloat(at.totalCost) || 0), 0);
+            const grandTotal = academicTotal + adminTechTotal;
+            
+            html += `<div class="section-header">A. TOTAL TRAINING COST FOR ACADEMIC STAFF: TZS ${academicTotal.toLocaleString()}</div>`;
+            html += `<div class="section-header">B. TOTAL TRAINING COST FOR ADMINISTRATIVE & TECHNICAL STAFF: TZS ${adminTechTotal.toLocaleString()}</div>`;
+            html += `<div class="section-header">TOTAL TRAINING BUDGET: TZS ${grandTotal.toLocaleString()}</div>`;
+            
+            html += `<button onclick="submitAllData()" ${isSubmitting ? 'disabled' : ''}>✓ SUBMIT ALL TRAINING NEEDS</button>`;
+            html += `<button class="secondary" onclick="goToStep(3)">← Back</button>`;
+        }
+        
+        container.innerHTML = html;
+    }
+    
+    // ============================================
+    // NAVIGATION FUNCTIONS
+    // ============================================
+    function nextToStep2() {
         const name = document.getElementById('staffName')?.value.trim();
         const gender = document.getElementById('gender')?.value;
         const category = document.getElementById('category')?.value;
-        const department = document.getElementById('department')?.value;
         
         if (!name || !gender || !category) {
-            showMessage('Please fill all required fields (*)', true);
+            showMessage('Please fill all required fields', true);
             return;
         }
         
-        staffInfo = { name, gender, category, department };
-        step = 2;
+        staffInfo = { name, gender, category };
+        currentStep = 2;
         render();
     }
     
-    function setLongTermNeed(need) {
-        if (need) {
-            step = 3;
-        } else {
-            step = 5;
-        }
+    function nextToStep3() {
+        currentStep = 3;
         render();
     }
     
-    function saveLongTerm() {
-        const area = document.getElementById('longArea')?.value;
-        const year = document.getElementById('longYear')?.value;
-        const outcome = document.getElementById('longOutcome')?.value.trim();
-        const remarks = document.getElementById('longRemarks')?.value.trim();
-        
-        if (!area || !year || !outcome) {
-            showMessage('Please fill Training Area, Proposed Year, and Expected Outcome', true);
-            return;
-        }
-        
-        longTermTrainings.push({ area, year, outcome, remarks });
-        step = 4;
+    function nextToStep4() {
+        currentStep = 4;
         render();
     }
     
-    function addAnotherLongTerm() {
-        step = 3;
+    function goToStep(step) {
+        currentStep = step;
         render();
     }
     
-    function finishLongTerm() {
-        step = 5;
+    // ============================================
+    // LONG-TERM FUNCTIONS (Simple Table)
+    // ============================================
+    function addLongTermRow() {
+        longTermTrainings.push({ area: '', y2026: false, y2027: false, y2028: false, outcome: '', remarks: '' });
         render();
     }
     
-    function setShortTermNeed(need) {
-        if (need) {
-            step = 6;
-        } else {
-            step = 8;
-        }
+    function updateLongTerm(index, field, value) {
+        longTermTrainings[index][field] = value;
+    }
+    
+    function removeLongTerm(index) {
+        longTermTrainings.splice(index, 1);
         render();
     }
     
-    function saveShortTerm() {
-        const area = document.getElementById('shortArea')?.value;
-        const year = document.getElementById('shortYear')?.value;
-        const outcome = document.getElementById('shortOutcome')?.value.trim();
-        
-        if (!area || !year || !outcome) {
-            showMessage('Please fill Training Area, Proposed Year, and Expected Outcome', true);
-            return;
-        }
-        
-        shortTermTrainings.push({ area, year, outcome });
-        step = 7;
+    // ============================================
+    // SHORT-TERM FUNCTIONS
+    // ============================================
+    function addShortTermRow() {
+        shortTermTrainings.push({ area: '', y2026: false, y2027: false, y2028: false, outcome: '', remarks: '' });
         render();
     }
     
-    function addAnotherShortTerm() {
-        step = 6;
+    function updateShortTerm(index, field, value) {
+        shortTermTrainings[index][field] = value;
+    }
+    
+    function removeShortTerm(index) {
+        shortTermTrainings.splice(index, 1);
         render();
     }
     
-    function finishShortTerm() {
-        step = 8;
+    // ============================================
+    // DETAILED LONG-TERM FUNCTIONS
+    // ============================================
+    function addAcademicRow() {
+        detailedLongTerm.academic.push({ name: '', gender: 'M', position: '', course: '', institution: '', sponsor: 'UDSM', duration: '', tuitionFee: '', otherCosts: '', totalCost: '', year: '', remarks: '' });
         render();
     }
     
-    async function submitForm() {
+    function updateAcademic(index, field, value) {
+        detailedLongTerm.academic[index][field] = value;
+        // Auto-calculate total
+        const tuition = parseFloat(detailedLongTerm.academic[index].tuitionFee) || 0;
+        const other = parseFloat(detailedLongTerm.academic[index].otherCosts) || 0;
+        detailedLongTerm.academic[index].totalCost = (tuition + other).toString();
+        render();
+    }
+    
+    function removeAcademic(index) {
+        detailedLongTerm.academic.splice(index, 1);
+        render();
+    }
+    
+    function addAdminTechRow() {
+        detailedLongTerm.adminTechnical.push({ name: '', gender: 'M', position: '', course: '', institution: '', sponsor: 'UDSM', duration: '', tuitionFee: '', otherCosts: '', totalCost: '', year: '', remarks: '' });
+        render();
+    }
+    
+    function updateAdminTech(index, field, value) {
+        detailedLongTerm.adminTechnical[index][field] = value;
+        const tuition = parseFloat(detailedLongTerm.adminTechnical[index].tuitionFee) || 0;
+        const other = parseFloat(detailedLongTerm.adminTechnical[index].otherCosts) || 0;
+        detailedLongTerm.adminTechnical[index].totalCost = (tuition + other).toString();
+        render();
+    }
+    
+    function removeAdminTech(index) {
+        detailedLongTerm.adminTechnical.splice(index, 1);
+        render();
+    }
+    
+    // ============================================
+    // SUBMIT FUNCTION
+    // ============================================
+    async function submitAllData() {
         if (isSubmitting) return;
         
         isSubmitting = true;
-        render();
         
         const payload = {
             staffInfo: staffInfo,
             longTermTrainings: longTermTrainings,
             shortTermTrainings: shortTermTrainings,
-            submittedAt: new Date().toISOString(),
-            userAgent: navigator.userAgent
+            detailedLongTerm: detailedLongTerm,
+            submittedAt: new Date().toISOString()
         };
         
         try {
@@ -414,13 +523,14 @@
                 body: JSON.stringify(payload)
             });
             
-            showMessage('✓ Training needs submitted successfully! Responses saved to Google Sheet.');
+            showMessage('✓ Training needs submitted successfully! All data saved to Google Sheet.');
             
             // Reset form
-            step = 1;
+            currentStep = 1;
             staffInfo = {};
             longTermTrainings = [];
             shortTermTrainings = [];
+            detailedLongTerm = { academic: [], adminTechnical: [] };
             isSubmitting = false;
             render();
             
@@ -432,12 +542,7 @@
         }
     }
     
-    function editForm() {
-        step = 1;
-        render();
-    }
-    
-    // Start the app
+    // Start the form
     render();
 </script>
 </body>
