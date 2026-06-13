@@ -167,15 +167,16 @@
 
 <script>
     // ============================================
-    // CONFIGURATION
+    // YOUR GOOGLE APPS SCRIPT WEB APP URL - UPDATED
     // ============================================
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyxAwihxnxtDa5eAtdbHjHRP9dkQKPw0KtmpfNNEamquqiU3l3eUtMDs_5HoE2h8CK-ig/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwt6swyQz2N3PXIwm7hzi9tGl-Kst2RDUFqhLPqYkEfjIxlJR7pDyxs7Z_y-d4FANdC/exec';
     
+    // Default costs
     const DEFAULT_YEARLY_TUITION = 3500000;
     const DEFAULT_YEARLY_OTHER_COSTS = 5000000;
     
     // ============================================
-    // STATE
+    // STATE MANAGEMENT
     // ============================================
     let currentStep = 1;
     let staffInfo = {};
@@ -195,7 +196,7 @@
     ];
     
     // ============================================
-    // HELPERS
+    // HELPER FUNCTIONS
     // ============================================
     function escapeHtml(str) {
         if (!str) return '';
@@ -282,7 +283,7 @@
         if (!container) return;
         let html = '';
         
-        // STEP 1
+        // STEP 1: Staff Information
         if (currentStep === 1) {
             html += `<h2>📋 STAFF INFORMATION</h2>`;
             html += `<div class="form-group"><label>Full Name *</label><input type="text" id="staffName" value="${escapeHtml(staffInfo.name || '')}"></div>`;
@@ -334,7 +335,7 @@
                     <td><button class="danger" onclick="removeShortTerm(${i})" style="padding:4px 8px">✗</button></td>
                 </tr>`;
             }
-            html += `</tbody></td>`;
+            html += `</tbody><tr>`;
             html += `<div class="button-group-left"><button class="add-btn" onclick="addShortTermRow()">+ Add Training</button></div>`;
             
             if (longTermTrainings.length > 0) {
@@ -359,7 +360,7 @@
             if (isAcademic) {
                 html += `<h3>ACADEMIC STAFF</h3>`;
                 if (detailedLongTerm.academic.length > 0) {
-                    html += `<tr><thead>；
+                    html += `<table><thead>；
                         <th>S/N</th><th>Name</th><th>Gender</th><th>Position</th><th>Course</th>
                         <th>Institution</th><th>Sponsor</th><th>Duration(m)</th>
                         <th>Yearly Tuition</th><th>Yearly Other</th>
@@ -417,7 +418,7 @@
                         <th>Yearly Tuition</th><th>Yearly Other</th>
                         <th>Year 1</th><th>Year 2</th><th>Year 3</th><th>Year 4</th>
                         <th>Total</th><th>Start Year</th><th>Remarks</th><th></th>
-                    </tr></thead><tbody>`;
+                    </table></thead><tbody>`;
                     
                     for (let i = 0; i < detailedLongTerm.adminTechnical.length; i++) {
                         const a = detailedLongTerm.adminTechnical[i];
