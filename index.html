@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training Needs Assessment</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: #1a1a2e; }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+        button {
+            background: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-right: 10px;
+            transition: background 0.2s;
+        }
+        button:hover { background: #1557b0; }
+        button.secondary { background: #5f6368; }
+        button.secondary:hover { background: #3c4043; }
+        .training-entry {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #1a73e8;
+        }
+        .summary {
+            background: #e8f0fe;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .progress {
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            background: #1a73e8;
+            height: 8px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            font-size: 12px;
+            color: #999;
+            border-radius: 20px;
+        }
+        .step.active { background: #1a73e8; color: white; }
+        .step.completed { background: #34a853; color: white; }
+        .training-count {
+            background: #1a73e8;
+            color: white;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #dc3545;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 20px; }
+            .step { font-size: 10px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container" id="app"></div>
+
+<script>
+    // ============================================
+    // YOUR GOOGLE APPS SCRIPT WEB APP URL
+    // ============================================
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyxAwihxnxtDa5eAtdbHjHRP9dkQKPw0KtmpfNNEamquqiU3l3eUtMDs_5HoE2h8CK-ig/exec';
+    
+    // ============================================
+    // STATE MANAGEMENT
+    // ============================================
+    let step = 1;
+    let staffInfo = {};
+    let longTermTrainings = [];
+    let shortTermTrainings = [];
+    let isSubmitting = false;
+    
+    // ============================================
+    // RENDER FUNCTION
+    // ============================================
+    function render() {
+        const app = document.getElementById('app');
+        if (!app) return;
+        
+        let html = '';
+        
+        // Progress Bar
+        const totalSteps = 8;
+        const progressPercent = ((step - 1) / totalSteps) * 100;
+        html += `<div class="progress"><div class="progress-bar" style="width: ${progressPercent}%"></div></div>`;
+        
+        // Step Indicator
+        html += `<div class="step-indicator">`;
+        const steps = ['Staff', 'Long Need', 'Long Entry', 'Add More?', 'Short Need', 'Short Entry', 'Add More?', 'Submit'];
+        steps.forEach((s, i) => {
+            const stepNum = i + 1;
+            let stepClass = '';
+            if (stepNum === step) stepClass = 'active';
+            else if (stepNum < step) stepClass = 'completed';
+            html += `<div class="step ${stepClass}">${stepNum}. ${s}</div>`;
+        });
+        html += `</div>`;
+        
+        // Step 1: Staff Information
+        if (step === 1) {
+            html += `<h2>📋 Staff Information</h2>`;
+            html += `<div class="form-group"><label>Full Name *</label><input type="text" id="staffName" value="${escapeHtml(staffInfo.name || '')}" required></div>`;
+            html += `<div class="form-group"><label>Gender *</label><select id="gender"><option value="">Select</option><option ${staffInfo.gender === 'Male' ? 'selected' : ''}>Male</option><option ${staffInfo.gender === 'Female' ? 'selected' : ''}>Female</option></select></div>`;
+            html += `<div class="form-group"><label>Staff Category *</label><select id="category"><option value="">Select</option><option ${staffInfo.category === 'Academic' ? 'selected' : ''}>Academic</option><option ${staffInfo.category === 'Administrative' ? 'selected' : ''}>Administrative</option><option ${staffInfo.category === 'Technical' ? 'selected' : ''}>Technical</option><option ${staffInfo.category === 'Research' ? 'selected' : ''}>Research</option><option ${staffInfo.category === 'Other' ? 'selected' : ''}>Other</option></select></div>`;
+            html += `<div class="form-group"><label>Department</label><input type="text" id="department" value="${escapeHtml(staffInfo.department || '')}"></div>`;
+            html += `<button onclick="saveStaffInfo()">Next →</button>`;
+        }
+        
+        // Step 2: Does staff need long-term training?
+        else if (step === 2) {
+            html += `<h2>🎓 Long-Term Training Need</h2>`;
+            html += `<p>Certificate, Diploma, Bachelor's, Master's, PhD, etc.</p>`;
+            html += `<button onclick="setLongTermNeed(true)">✓ Yes, I need long-term training</button>`;
+            html += `<button class="secondary" onclick="setLongTermNeed(false)">✗ No, skip to short-term</button>`;
+        }
+        
+        // Step 3: Enter ONE long-term training
+        else if (step === 3) {
+            const count = longTermTrainings.length + 1;
+            html += `<h2><span class="training-count">${count}</span> Long-Term Training #${count}</h2>`;
+            html += `<div class="training-entry">`;
+            html += `<div class="form-group"><label>Training Area *</label><select id="longArea"><option value="">Select</option><option>Certificate</option><option>Diploma</option><option>Bachelor's Degree</option><option>Master's Degree</option><option>PhD</option><option>Postgraduate Diploma</option><option>Other</option></select></div>`;
+            html += `<div class="form-group"><label>Proposed Year *</label><select id="longYear"><option value="">Select</option><option>2026/27</option><option>2027/28</option><option>2028/29</option></select></div>`;
+            html += `<div class="form-group"><label>Expected Outcome *</label><textarea id="longOutcome" rows="3" placeholder="What will you achieve?"></textarea></div>`;
+            html += `<div class="form-group"><label>Remarks (optional)</label><textarea id="longRemarks" rows="2" placeholder="Any additional notes?"></textarea></div>`;
+            html += `</div>`;
+            html += `<button onclick="saveLongTerm()">Save & Continue →</button>`;
+        }
+        
+        // Step 4: Ask if they want to add another long-term training
+        else if (step === 4) {
+            html += `<h2>✅ Long-Term Training Added!</h2>`;
+            html += `<div class="summary"><strong>📚 You have added ${longTermTrainings.length} long-term training(s):</strong><ul>`;
+            longTermTrainings.forEach((t, i) => {
+                html += `<li><strong>#${i+1}:</strong> ${escapeHtml(t.area)} (${escapeHtml(t.year)})</li>`;
+            });
+            html += `</ul></div>`;
+            html += `<p>Do you have another long-term training to add?</p>`;
+            html += `<button onclick="addAnotherLongTerm()">✓ Yes, add another →</button>`;
+            html += `<button class="secondary" onclick="finishLongTerm()">✗ No, go to short-term training</button>`;
+        }
+        
+        // Step 5: Does staff need short-term training?
+        else if (step === 5) {
+            html += `<h2>🛠️ Short-Term Training Need</h2>`;
+            html += `<p>Workshops, short courses, seminars, etc.</p>`;
+            html += `<button onclick="setShortTermNeed(true)">✓ Yes, I need short-term training</button>`;
+            html += `<button class="secondary" onclick="setShortTermNeed(false)">✗ No, go to submit</button>`;
+        }
+        
+        // Step 6: Enter ONE short-term training
+        else if (step === 6) {
+            const count = shortTermTrainings.length + 1;
+            html += `<h2><span class="training-count">${count}</span> Short-Term Training #${count}</h2>`;
+            html += `<div class="training-entry">`;
+            html += `<div class="form-group"><label>Training Area *</label><select id="shortArea"><option value="">Select</option><option>Research Grant Writing</option><option>Data Analysis (SPSS)</option><option>Data Analysis (R)</option><option>SmartPLS</option><option>Teaching Pedagogy</option><option>ICT Skills</option><option>Artificial Intelligence</option><option>Laboratory Management</option><option>Leadership & Management</option><option>Customer Care</option><option>Other</option></select></div>`;
+            html += `<div class="form-group"><label>Proposed Year *</label><select id="shortYear"><option value="">Select</option><option>2026/27</option><option>2027/28</option><option>2028/29</option></select></div>`;
+            html += `<div class="form-group"><label>Expected Outcome *</label><textarea id="shortOutcome" rows="3" placeholder="What will you achieve?"></textarea></div>`;
+            html += `</div>`;
+            html += `<button onclick="saveShortTerm()">Save & Continue →</button>`;
+        }
+        
+        // Step 7: Ask if they want to add another short-term training
+        else if (step === 7) {
+            html += `<h2>✅ Short-Term Training Added!</h2>`;
+            html += `<div class="summary"><strong>📚 You have added ${shortTermTrainings.length} short-term training(s):</strong><ul>`;
+            shortTermTrainings.forEach((t, i) => {
+                html += `<li><strong>#${i+1}:</strong> ${escapeHtml(t.area)} (${escapeHtml(t.year)})</li>`;
+            });
+            html += `</ul></div>`;
+            html += `<p>Do you have another short-term training to add?</p>`;
+            html += `<button onclick="addAnotherShortTerm()">✓ Yes, add another →</button>`;
+            html += `<button class="secondary" onclick="finishShortTerm()">✗ No, go to submit</button>`;
+        }
+        
+        // Step 8: Summary and Submit
+        else if (step === 8) {
+            html += `<h2>📝 Review Your Training Needs</h2>`;
+            
+            html += `<div class="summary"><strong>👤 Staff Information</strong><br>`;
+            html += `<strong>Name:</strong> ${escapeHtml(staffInfo.name)}<br>`;
+            html += `<strong>Gender:</strong> ${escapeHtml(staffInfo.gender)}<br>`;
+            html += `<strong>Category:</strong> ${escapeHtml(staffInfo.category)}<br>`;
+            html += `<strong>Department:</strong> ${escapeHtml(staffInfo.department)}</div>`;
+            
+            html += `<div class="summary"><strong>🎓 Long-Term Training (${longTermTrainings.length})</strong>`;
+            if (longTermTrainings.length === 0) {
+                html += `<br>No long-term training needs.</div>`;
+            } else {
+                html += `<ul>`;
+                longTermTrainings.forEach((t, i) => {
+                    html += `<li><strong>${i+1}.</strong> ${escapeHtml(t.area)} - ${escapeHtml(t.year)}<br><small>Outcome: ${escapeHtml(t.outcome)}</small>`;
+                    if (t.remarks) html += `<br><small>Remarks: ${escapeHtml(t.remarks)}</small>`;
+                    html += `</li>`;
+                });
+                html += `</ul></div>`;
+            }
+            
+            html += `<div class="summary"><strong>🛠️ Short-Term Training (${shortTermTrainings.length})</strong>`;
+            if (shortTermTrainings.length === 0) {
+                html += `<br>No short-term training needs.</div>`;
+            } else {
+                html += `<ul>`;
+                shortTermTrainings.forEach((t, i) => {
+                    html += `<li><strong>${i+1}.</strong> ${escapeHtml(t.area)} - ${escapeHtml(t.year)}<br><small>Outcome: ${escapeHtml(t.outcome)}</small></li>`;
+                });
+                html += `</ul></div>`;
+            }
+            
+            html += `<button onclick="submitForm()" ${isSubmitting ? 'disabled' : ''}>✓ Submit All Training Needs</button>`;
+            html += `<button class="secondary" onclick="editForm()">← Back to Edit</button>`;
+        }
+        
+        app.innerHTML = html;
+    }
+    
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    function showMessage(message, isError = false) {
+        const app = document.getElementById('app');
+        const msgDiv = document.createElement('div');
+        msgDiv.className = isError ? 'error-message' : 'success-message';
+        msgDiv.textContent = message;
+        app.insertBefore(msgDiv, app.firstChild);
+        setTimeout(() => msgDiv.remove(), 5000);
+    }
+    
+    // ============================================
+    // STEP FUNCTIONS
+    // ============================================
+    function saveStaffInfo() {
+        const name = document.getElementById('staffName')?.value.trim();
+        const gender = document.getElementById('gender')?.value;
+        const category = document.getElementById('category')?.value;
+        const department = document.getElementById('department')?.value;
+        
+        if (!name || !gender || !category) {
+            showMessage('Please fill all required fields (*)', true);
+            return;
+        }
+        
+        staffInfo = { name, gender, category, department };
+        step = 2;
+        render();
+    }
+    
+    function setLongTermNeed(need) {
+        if (need) {
+            step = 3;
+        } else {
+            step = 5;
+        }
+        render();
+    }
+    
+    function saveLongTerm() {
+        const area = document.getElementById('longArea')?.value;
+        const year = document.getElementById('longYear')?.value;
+        const outcome = document.getElementById('longOutcome')?.value.trim();
+        const remarks = document.getElementById('longRemarks')?.value.trim();
+        
+        if (!area || !year || !outcome) {
+            showMessage('Please fill Training Area, Proposed Year, and Expected Outcome', true);
+            return;
+        }
+        
+        longTermTrainings.push({ area, year, outcome, remarks });
+        step = 4;
+        render();
+    }
+    
+    function addAnotherLongTerm() {
+        step = 3;
+        render();
+    }
+    
+    function finishLongTerm() {
+        step = 5;
+        render();
+    }
+    
+    function setShortTermNeed(need) {
+        if (need) {
+            step = 6;
+        } else {
+            step = 8;
+        }
+        render();
+    }
+    
+    function saveShortTerm() {
+        const area = document.getElementById('shortArea')?.value;
+        const year = document.getElementById('shortYear')?.value;
+        const outcome = document.getElementById('shortOutcome')?.value.trim();
+        
+        if (!area || !year || !outcome) {
+            showMessage('Please fill Training Area, Proposed Year, and Expected Outcome', true);
+            return;
+        }
+        
+        shortTermTrainings.push({ area, year, outcome });
+        step = 7;
+        render();
+    }
+    
+    function addAnotherShortTerm() {
+        step = 6;
+        render();
+    }
+    
+    function finishShortTerm() {
+        step = 8;
+        render();
+    }
+    
+    async function submitForm() {
+        if (isSubmitting) return;
+        
+        isSubmitting = true;
+        render();
+        
+        const payload = {
+            staffInfo: staffInfo,
+            longTermTrainings: longTermTrainings,
+            shortTermTrainings: shortTermTrainings,
+            submittedAt: new Date().toISOString(),
+            userAgent: navigator.userAgent
+        };
+        
+        try {
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            showMessage('✓ Training needs submitted successfully! Responses saved to Google Sheet.');
+            
+            // Reset form
+            step = 1;
+            staffInfo = {};
+            longTermTrainings = [];
+            shortTermTrainings = [];
+            isSubmitting = false;
+            render();
+            
+        } catch (error) {
+            console.error('Submission error:', error);
+            showMessage('Error submitting form. Please try again.', true);
+            isSubmitting = false;
+            render();
+        }
+    }
+    
+    function editForm() {
+        step = 1;
+        render();
+    }
+    
+    // Start the app
+    render();
+</script>
+</body>
+</html>
