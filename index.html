@@ -62,7 +62,14 @@
             border-color: #1a73e8;
             box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
         }
-        input[readonly] {
+        /* Read-only style */
+        input[readonly], select[readonly], textarea[readonly] {
+            background-color: #f0f0f0;
+            cursor: not-allowed;
+            border-color: #ccc;
+            color: #333;
+        }
+        select:disabled {
             background-color: #f0f0f0;
             cursor: not-allowed;
         }
@@ -131,12 +138,12 @@
             margin: 15px 0;
             font-weight: bold;
         }
-        .readonly-field {
-            background-color: #f5f5f5;
-            border: 1px solid #ddd;
-            padding: 10px;
-            border-radius: 6px;
-            color: #333;
+        .warning-banner {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 8px;
         }
         @media (max-width: 768px) {
             .container { padding: 15px; }
@@ -173,11 +180,6 @@
     };
     let isSubmitting = false;
     
-    // Position options
-    const academicPositions = ['Professor', 'Associate Professor', 'Senior Lecturer', 'Lecturer', 'Assistant Lecturer', 'Tutorial Assistant'];
-    const adminPositions = ['Director', 'Head of Department', 'Senior Administrative Officer', 'Administrative Officer', 'Secretary', 'Clerical Officer'];
-    const technicalPositions = ['Chief Technician', 'Senior Technician', 'Technician', 'Assistant Technician', 'Laboratory Assistant'];
-    
     // Training options
     const longTermAreas = ['Certificate', 'Diploma', 'Postgraduate Diploma', 'Bachelor\'s Degree', 'Master\'s Degree', 'PhD', 'Other'];
     const shortTermAreas = [
@@ -212,12 +214,11 @@
     
     // Calculate yearly costs based on months and start year
     function calculateYearlyCosts(months, yearlyTuition, yearlyOther, startYear) {
-        const years = months / 12;
         const yearlyCost = yearlyTuition + yearlyOther;
         const results = [];
-        
-        // Determine academic years
         const startYearNum = parseInt(startYear);
+        
+        // Define academic years based on start year
         const academicYears = [
             `${startYearNum}/${startYearNum + 1}`,
             `${startYearNum + 1}/${startYearNum + 2}`,
@@ -253,17 +254,17 @@
         
         let html = '';
         
-        // Step 1: Staff Information
+        // STEP 1: Staff Information (with Position)
         if (currentStep === 1) {
             html += `<h2>📋 SECTION 1: STAFF INFORMATION</h2>`;
             html += `<div class="form-group"><label>Full Name *</label><input type="text" id="staffName" value="${escapeHtml(staffInfo.name || '')}"></div>`;
             html += `<div class="form-group"><label>Gender *</label><select id="gender"><option value="">Select</option><option ${staffInfo.gender === 'Male' ? 'selected' : ''}>Male</option><option ${staffInfo.gender === 'Female' ? 'selected' : ''}>Female</option></select></div>`;
             html += `<div class="form-group"><label>Staff Category *</label><select id="category"><option value="">Select</option><option ${staffInfo.category === 'Academic Staff' ? 'selected' : ''}>Academic Staff</option><option ${staffInfo.category === 'Administrative Staff' ? 'selected' : ''}>Administrative Staff</option><option ${staffInfo.category === 'Technical Staff' ? 'selected' : ''}>Technical Staff</option></select></div>`;
-            html += `<div class="form-group"><label>Position *</label><input type="text" id="position" value="${escapeHtml(staffInfo.position || '')}" placeholder="Enter your position"></div>`;
+            html += `<div class="form-group"><label>Position *</label><input type="text" id="position" value="${escapeHtml(staffInfo.position || '')}" placeholder="e.g., Senior Lecturer, Administrative Officer, Senior Technician"></div>`;
             html += `<button onclick="nextToStep2()">Next →</button>`;
         }
         
-        // Step 2: Long-Term Training (4a)
+        // STEP 2: Long-Term Training
         else if (currentStep === 2) {
             html += `<h2>📚 SECTION 2A: LONG-TERM TRAINING NEEDS (4a)</h2>`;
             html += `<div class="info-banner">Examples: Certificate, Diploma, Postgraduate Diploma, Bachelor's Degree, Master's Degree, PhD</div>`;
@@ -273,13 +274,12 @@
             
             for (let i = 0; i < longTermTrainings.length; i++) {
                 const t = longTermTrainings[i];
-                const startYear = t.y2026 ? '2026' : (t.y2027 ? '2027' : (t.y2028 ? '2028' : ''));
                 html += `<tr>
                     <td>${i+1}</td>
                     <td><input type="text" value="${escapeHtml(t.area)}" onchange="updateLongTerm(${i}, 'area', this.value)" style="width:160px" list="longTermList"><datalist id="longTermList">${longTermAreas.map(a => `<option>${a}</option>`).join('')}</datalist></td>
-                    <td><input type="checkbox" ${t.y2026 ? 'checked' : ''} onchange="updateLongTerm(${i}, 'y2026', this.checked); updateLongTermStartYear(${i})" style="width:20px"></td>
-                    <td><input type="checkbox" ${t.y2027 ? 'checked' : ''} onchange="updateLongTerm(${i}, 'y2027', this.checked); updateLongTermStartYear(${i})" style="width:20px"></td>
-                    <td><input type="checkbox" ${t.y2028 ? 'checked' : ''} onchange="updateLongTerm(${i}, 'y2028', this.checked); updateLongTermStartYear(${i})" style="width:20px"></td>
+                    <td><input type="checkbox" ${t.y2026 ? 'checked' : ''} onchange="updateLongTerm(${i}, 'y2026', this.checked)" style="width:20px"></td>
+                    <td><input type="checkbox" ${t.y2027 ? 'checked' : ''} onchange="updateLongTerm(${i}, 'y2027', this.checked)" style="width:20px"></td>
+                    <td><input type="checkbox" ${t.y2028 ? 'checked' : ''} onchange="updateLongTerm(${i}, 'y2028', this.checked)" style="width:20px"></td>
                     <td><input type="number" value="${t.duration || ''}" onchange="updateLongTerm(${i}, 'duration', this.value)" style="width:80px" placeholder="months"></td>
                     <td><input type="text" value="${escapeHtml(t.outcome)}" onchange="updateLongTerm(${i}, 'outcome', this.value)" style="width:160px"></td>
                     <td><input type="text" value="${escapeHtml(t.remarks)}" onchange="updateLongTerm(${i}, 'remarks', this.value)" style="width:140px"></td>
@@ -287,17 +287,17 @@
                 </tr>`;
             }
             
-            html += `</tbody></td>`;
+            html += `</tbody></table>`;
             html += `<button onclick="addLongTermRow()">+ Add Another Training</button>`;
             html += `<button onclick="nextToStep3()">Next → Short-Term Training</button>`;
             html += `<button class="secondary" onclick="goToStep(1)">← Back</button>`;
         }
         
-        // Step 3: Short-Term Training (4b)
+        // STEP 3: Short-Term Training
         else if (currentStep === 3) {
             html += `<h2>🛠️ SECTION 2B: SHORT-TERM TRAINING NEEDS (4b)</h2>`;
-            html += `<div class="info-banner">Examples: Research Grant Writing, Data Analysis, Teaching Pedagogy, ICT Skills, AI, Leadership, Customer Care</div>`;
-            html += `<table>`;
+            html += `<div class="info-banner">Examples: Research Grant Writing, Data Analysis (SPSS/R/SmartPLS), Teaching Pedagogy, ICT Skills, Artificial Intelligence, Laboratory Management, Leadership & Management, Customer Care</div>`;
+            html += `<tr>`;
             html += `<thead><tr><th>S/N</th><th>Training Area</th><th>2026/27</th><th>2027/28</th><th>2028/29</th><th>Expected Outcome</th><th>Remarks</th><th></th></tr></thead>`;
             html += `<tbody id="shortTermTableBody">`;
             
@@ -317,159 +317,148 @@
             
             html += `</tbody></table>`;
             html += `<button onclick="addShortTermRow()">+ Add Another Training</button>`;
-            html += `<button onclick="nextToStep4()">Next → Detailed Financial Plan</button>`;
+            
+            // Only show "Next to Financial Plan" if long-term training exists
+            if (longTermTrainings.length > 0) {
+                html += `<button onclick="nextToStep4()">Next → Detailed Financial Plan</button>`;
+            } else {
+                html += `<button onclick="submitOnlyShortTerm()" ${isSubmitting ? 'disabled' : ''}>✓ SUBMIT (No Long-Term Training)</button>`;
+            }
             html += `<button class="secondary" onclick="goToStep(2)">← Back</button>`;
         }
         
-        // Step 4: Detailed Long-Term Financial Plan
-        else if (currentStep === 4) {
-            // Auto-populate from Step 2 data
+        // STEP 4: Detailed Financial Plan (ONLY SHOWN if long-term training exists AND user has a valid category)
+        else if (currentStep === 4 && longTermTrainings.length > 0) {
+            // Auto-populate from earlier data
             autoPopulateDetailedPlan();
             
             html += `<h2>💰 SECTION 3: DETAILED LONG-TERM FINANCIAL PLAN</h2>`;
             html += `<div class="info-banner">
                 <strong>Note:</strong> For UDSM sponsorship, long-term courses should be Master and PhD.<br>
                 Tuition fees and living allowances are calculated based on UDSM sponsorship rates.<br>
-                <strong>Cost Calculation:</strong> (Yearly Tuition + Yearly Other) × (Duration in months ÷ 12)<br>
-                Costs appear for each academic year based on the commencement year and duration.
+                <strong>Fields are auto-populated and read-only.</strong> Only Institution, Sponsor, and Remarks can be edited.
             </div>`;
             
-            // SECTION I: ACADEMIC STAFF
-            html += `<h3>SECTION I: ACADEMIC STAFF</h3>`;
-            html += `<table>`;
-            html += `<thead><tr>
-                <th>S/N</th><th>Name</th><th>Gender</th><th>Position</th><th>Course/Programme</th>
-                <th>Institution</th><th>Sponsor</th><th>Duration(m)</th>
-                <th>Yearly Tuition(TZS)</th><th>Yearly Other(TZS)</th>
-                <th>Year 1 Cost (Year)</th><th>Year 2 Cost (Year)</th><th>Year 3 Cost (Year)</th><th>Year 4 Cost (Year)</th>
-                <th>Total Cost(TZS)</th><th>Start Year</th><th>Remarks</th><th></th>
-            </tr></thead>`;
-            html += `<tbody id="academicTableBody">`;
+            // Determine which section to show based on staff category
+            const isAcademic = (staffInfo.category === 'Academic Staff');
             
-            for (let i = 0; i < detailedLongTerm.academic.length; i++) {
-                const a = detailedLongTerm.academic[i];
-                const months = parseInt(a.duration) || 0;
-                const yearlyTuition = parseFloat(a.yearlyTuition) || DEFAULT_YEARLY_TUITION;
-                const yearlyOther = parseFloat(a.yearlyOther) || DEFAULT_YEARLY_OTHER_COSTS;
-                const startYear = a.year || '2026';
+            if (isAcademic) {
+                // SECTION I: ACADEMIC STAFF ONLY
+                html += `<h3>SECTION I: ACADEMIC STAFF</h3>`;
+                html += `给<table>`;
+                html += `<thead>`;
+                html += `<tr><th>S/N</th><th>Name</th><th>Gender</th><th>Position</th><th>Course/Programme</th>`;
+                html += `<th>Institution</th><th>Sponsor</th><th>Duration(m)</th>`;
+                html += `<th>Yearly Tuition(TZS)</th><th>Yearly Other(TZS)</th>`;
+                html += `<th>Year 1 Cost</th><th>Year 2 Cost</th><th>Year 3 Cost</th><th>Year 4 Cost</th>`;
+                html += `<th>Total Cost(TZS)</th><th>Start Year</th><th>Remarks</th><th></th></tr>`;
+                html += `</thead><tbody id="academicTableBody">`;
                 
-                const yearlyCosts = calculateYearlyCosts(months, yearlyTuition, yearlyOther, startYear);
+                let academicTotal = 0;
                 
-                // Calculate total cost
-                const totalCost = yearlyCosts.reduce((sum, yc) => sum + yc.cost, 0);
-                
-                html += `<tr>
-                    <td>${i+1}</td>
-                    <td><input type="text" value="${escapeHtml(a.name)}" readonly style="background:#f5f5f5; width:120px"></td>
-                    <td><input type="text" value="${a.gender === 'M' ? 'Male' : 'Female'}" readonly style="background:#f5f5f5; width:70px"></td>
-                    <td><input type="text" value="${escapeHtml(a.position)}" readonly style="background:#f5f5f5; width:100px"></td>
-                    <td><input type="text" value="${escapeHtml(a.course)}" readonly style="background:#f5f5f5; width:150px"></td>
-                    <td><input type="text" value="${escapeHtml(a.institution)}" onchange="updateAcademic(${i}, 'institution', this.value)" style="width:100px"></td>
-                    <td><select onchange="updateAcademic(${i}, 'sponsor', this.value)"><option ${a.sponsor === 'UDSM' ? 'selected' : ''}>UDSM</option><option ${a.sponsor === 'NIF' ? 'selected' : ''}>NIF</option><option ${a.sponsor === 'Secure D' ? 'selected' : ''}>Secure D</option><option ${a.sponsor === 'Other' ? 'selected' : ''}>Other</option></select></td>
-                    <td><input type="number" value="${a.duration || ''}" onchange="updateAcademic(${i}, 'duration', this.value)" style="width:70px"></td>
-                    <td><input type="number" value="${a.yearlyTuition || DEFAULT_YEARLY_TUITION}" onchange="updateAcademic(${i}, 'yearlyTuition', this.value)" style="width:100px"></td>
-                    <td><input type="number" value="${a.yearlyOther || DEFAULT_YEARLY_OTHER_COSTS}" onchange="updateAcademic(${i}, 'yearlyOther', this.value)" style="width:100px"></td>`;
-                
-                // Display costs for each year
-                for (let y = 0; y < 4; y++) {
-                    if (y < yearlyCosts.length) {
-                        html += `<td>${Math.round(yearlyCosts[y].cost).toLocaleString()}<br><small>(${yearlyCosts[y].year})</small></td>`;
-                    } else {
-                        html += `<td>-</td>`;
+                for (let i = 0; i < detailedLongTerm.academic.length; i++) {
+                    const a = detailedLongTerm.academic[i];
+                    const months = parseInt(a.duration) || 0;
+                    const yearlyTuition = parseFloat(a.yearlyTuition) || DEFAULT_YEARLY_TUITION;
+                    const yearlyOther = parseFloat(a.yearlyOther) || DEFAULT_YEARLY_OTHER_COSTS;
+                    const startYear = a.year || '2026';
+                    
+                    const yearlyCosts = calculateYearlyCosts(months, yearlyTuition, yearlyOther, startYear);
+                    const totalCost = yearlyCosts.reduce((sum, yc) => sum + yc.cost, 0);
+                    academicTotal += totalCost;
+                    
+                    html += `<tr>
+                        <td>${i+1}</td>
+                        <td><input type="text" value="${escapeHtml(a.name)}" readonly style="width:120px"></td>
+                        <td><input type="text" value="${a.gender === 'M' ? 'Male' : 'Female'}" readonly style="width:70px"></td>
+                        <td><input type="text" value="${escapeHtml(a.position)}" readonly style="width:100px"></td>
+                        <td><input type="text" value="${escapeHtml(a.course)}" readonly style="width:150px"></td>
+                        <td><input type="text" value="${escapeHtml(a.institution)}" onchange="updateAcademic(${i}, 'institution', this.value)" style="width:100px"></td>
+                        <td><select onchange="updateAcademic(${i}, 'sponsor', this.value)"><option ${a.sponsor === 'UDSM' ? 'selected' : ''}>UDSM</option><option ${a.sponsor === 'NIF' ? 'selected' : ''}>NIF</option><option ${a.sponsor === 'Secure D' ? 'selected' : ''}>Secure D</option><option ${a.sponsor === 'Other' ? 'selected' : ''}>Other</option></select></td>
+                        <td><input type="number" value="${a.duration || ''}" readonly style="width:70px"></td>
+                        <td><input type="number" value="${a.yearlyTuition || DEFAULT_YEARLY_TUITION}" onchange="updateAcademic(${i}, 'yearlyTuition', this.value)" style="width:100px"></td>
+                        <td><input type="number" value="${a.yearlyOther || DEFAULT_YEARLY_OTHER_COSTS}" onchange="updateAcademic(${i}, 'yearlyOther', this.value)" style="width:100px"></td>`;
+                    
+                    // Display yearly costs with year labels
+                    for (let y = 0; y < 4; y++) {
+                        if (y < yearlyCosts.length) {
+                            html += `<td>${Math.round(yearlyCosts[y].cost).toLocaleString()}<br><small>(${yearlyCosts[y].year})</small></td>`;
+                        } else {
+                            html += `<td>-</td>`;
+                        }
                     }
+                    
+                    html += `<td><strong>${Math.round(totalCost).toLocaleString()}</strong></td>
+                        <td><input type="text" value="${escapeHtml(a.year)}" readonly style="width:70px"></td>
+                        <td><input type="text" value="${escapeHtml(a.remarks)}" onchange="updateAcademic(${i}, 'remarks', this.value)" style="width:100px"></td>
+                        <td><button class="danger" onclick="removeAcademic(${i})" style="padding:2px 6px">✗</button></td>
+                    </tr>`;
                 }
                 
-                html += `<td><strong>${Math.round(totalCost).toLocaleString()}</strong></td>
-                    <td><input type="text" value="${escapeHtml(a.year)}" onchange="updateAcademic(${i}, 'year', this.value)" placeholder="2026" style="width:70px"></td>
-                    <td><input type="text" value="${escapeHtml(a.remarks)}" onchange="updateAcademic(${i}, 'remarks', this.value)" style="width:100px"></td>
-                    <td><button class="danger" onclick="removeAcademic(${i})" style="padding:2px 6px">✗</button></td>
-                </tr>`;
-            }
-            
-            html += `</tbody></table>`;
-            html += `<button onclick="addAcademicRow()">+ Add Academic Staff Training</button>`;
-            
-            // Academic Total
-            let academicTotal = 0;
-            for (const a of detailedLongTerm.academic) {
-                const months = parseInt(a.duration) || 0;
-                const yearlyTuition = parseFloat(a.yearlyTuition) || DEFAULT_YEARLY_TUITION;
-                const yearlyOther = parseFloat(a.yearlyOther) || DEFAULT_YEARLY_OTHER_COSTS;
-                const startYear = a.year || '2026';
-                const yearlyCosts = calculateYearlyCosts(months, yearlyTuition, yearlyOther, startYear);
-                academicTotal += yearlyCosts.reduce((sum, yc) => sum + yc.cost, 0);
-            }
-            
-            // SECTION II: ADMINISTRATIVE & TECHNICAL STAFF
-            html += `<h3>SECTION II: ADMINISTRATIVE & TECHNICAL STAFF</h3>`;
-            html += `<table>`;
-            html += `<thead><tr>
-                <th>S/N</th><th>Name</th><th>Gender</th><th>Position</th><th>Course/Programme</th>
-                <th>Institution</th><th>Sponsor</th><th>Duration(m)</th>
-                <th>Yearly Tuition(TZS)</th><th>Yearly Other(TZS)</th>
-                <th>Year 1 Cost (Year)</th><th>Year 2 Cost (Year)</th><th>Year 3 Cost (Year)</th><th>Year 4 Cost (Year)</th>
-                <th>Total Cost(TZS)</th><th>Start Year</th><th>Remarks</th><th></th>
-            </tr></thead>`;
-            html += `<tbody id="adminTechTableBody">`;
-            
-            for (let i = 0; i < detailedLongTerm.adminTechnical.length; i++) {
-                const at = detailedLongTerm.adminTechnical[i];
-                const months = parseInt(at.duration) || 0;
-                const yearlyTuition = parseFloat(at.yearlyTuition) || DEFAULT_YEARLY_TUITION;
-                const yearlyOther = parseFloat(at.yearlyOther) || DEFAULT_YEARLY_OTHER_COSTS;
-                const startYear = at.year || '2026';
+                html += `</tbody></table>`;
+                html += `<button onclick="addAcademicRow()">+ Add Academic Staff Training</button>`;
+                html += `<div class="cost-summary">
+                    <strong>A. TOTAL TRAINING COST FOR ACADEMIC STAFF:</strong> TZS ${Math.round(academicTotal).toLocaleString()}<br>
+                </div>`;
                 
-                const yearlyCosts = calculateYearlyCosts(months, yearlyTuition, yearlyOther, startYear);
-                const totalCost = yearlyCosts.reduce((sum, yc) => sum + yc.cost, 0);
+            } else {
+                // SECTION II: ADMINISTRATIVE & TECHNICAL STAFF ONLY
+                html += `<h3>SECTION II: ADMINISTRATIVE & TECHNICAL STAFF</h3>`;
+                html += `<table>`;
+                html += `<thead>`;
+                html += `<tr><th>S/N</th><th>Name</th><th>Gender</th><th>Position</th><th>Course/Programme</th>`;
+                html += `<th>Institution</th><th>Sponsor</th><th>Duration(m)</th>`;
+                html += `<th>Yearly Tuition(TZS)</th><th>Yearly Other(TZS)</th>`;
+                html += `<th>Year 1 Cost</th><th>Year 2 Cost</th><th>Year 3 Cost</th><th>Year 4 Cost</th>`;
+                html += `<th>Total Cost(TZS)</th><th>Start Year</th><th>Remarks</th><th></th></tr>`;
+                html += `</thead><tbody id="adminTechTableBody">`;
                 
-                html += `<tr>
-                    <td>${i+1}</td>
-                    <td><input type="text" value="${escapeHtml(at.name)}" readonly style="background:#f5f5f5; width:120px"></td>
-                    <td><input type="text" value="${at.gender === 'M' ? 'Male' : 'Female'}" readonly style="background:#f5f5f5; width:70px"></td>
-                    <td><input type="text" value="${escapeHtml(at.position)}" readonly style="background:#f5f5f5; width:100px"></td>
-                    <td><input type="text" value="${escapeHtml(at.course)}" readonly style="background:#f5f5f5; width:150px"></td>
-                    <td><input type="text" value="${escapeHtml(at.institution)}" onchange="updateAdminTech(${i}, 'institution', this.value)" style="width:100px"></td>
-                    <td><select onchange="updateAdminTech(${i}, 'sponsor', this.value)"><option ${at.sponsor === 'UDSM' ? 'selected' : ''}>UDSM</option><option ${at.sponsor === 'NIF' ? 'selected' : ''}>NIF</option><option ${at.sponsor === 'Secure D' ? 'selected' : ''}>Secure D</option><option ${at.sponsor === 'Other' ? 'selected' : ''}>Other</option></select></td>
-                    <td><input type="number" value="${at.duration || ''}" onchange="updateAdminTech(${i}, 'duration', this.value)" style="width:70px"></td>
-                    <td><input type="number" value="${at.yearlyTuition || DEFAULT_YEARLY_TUITION}" onchange="updateAdminTech(${i}, 'yearlyTuition', this.value)" style="width:100px"></td>
-                    <td><input type="number" value="${at.yearlyOther || DEFAULT_YEARLY_OTHER_COSTS}" onchange="updateAdminTech(${i}, 'yearlyOther', this.value)" style="width:100px"></td>`;
+                let adminTechTotal = 0;
                 
-                for (let y = 0; y < 4; y++) {
-                    if (y < yearlyCosts.length) {
-                        html += `<td>${Math.round(yearlyCosts[y].cost).toLocaleString()}<br><small>(${yearlyCosts[y].year})</small></td>`;
-                    } else {
-                        html += `<td>-</td>`;
+                for (let i = 0; i < detailedLongTerm.adminTechnical.length; i++) {
+                    const at = detailedLongTerm.adminTechnical[i];
+                    const months = parseInt(at.duration) || 0;
+                    const yearlyTuition = parseFloat(at.yearlyTuition) || DEFAULT_YEARLY_TUITION;
+                    const yearlyOther = parseFloat(at.yearlyOther) || DEFAULT_YEARLY_OTHER_COSTS;
+                    const startYear = at.year || '2026';
+                    
+                    const yearlyCosts = calculateYearlyCosts(months, yearlyTuition, yearlyOther, startYear);
+                    const totalCost = yearlyCosts.reduce((sum, yc) => sum + yc.cost, 0);
+                    adminTechTotal += totalCost;
+                    
+                    html += `<tr>
+                        <td>${i+1}</td>
+                        <td><input type="text" value="${escapeHtml(at.name)}" readonly style="width:120px"></td>
+                        <td><input type="text" value="${at.gender === 'M' ? 'Male' : 'Female'}" readonly style="width:70px"></td>
+                        <td><input type="text" value="${escapeHtml(at.position)}" readonly style="width:100px"></td>
+                        <td><input type="text" value="${escapeHtml(at.course)}" readonly style="width:150px"></td>
+                        <td><input type="text" value="${escapeHtml(at.institution)}" onchange="updateAdminTech(${i}, 'institution', this.value)" style="width:100px"></td>
+                        <td><select onchange="updateAdminTech(${i}, 'sponsor', this.value)"><option ${at.sponsor === 'UDSM' ? 'selected' : ''}>UDSM</option><option ${at.sponsor === 'NIF' ? 'selected' : ''}>NIF</option><option ${at.sponsor === 'Secure D' ? 'selected' : ''}>Secure D</option><option ${at.sponsor === 'Other' ? 'selected' : ''}>Other</option></select></td>
+                        <td><input type="number" value="${at.duration || ''}" readonly style="width:70px"></td>
+                        <td><input type="number" value="${at.yearlyTuition || DEFAULT_YEARLY_TUITION}" onchange="updateAdminTech(${i}, 'yearlyTuition', this.value)" style="width:100px"></td>
+                        <td><input type="number" value="${at.yearlyOther || DEFAULT_YEARLY_OTHER_COSTS}" onchange="updateAdminTech(${i}, 'yearlyOther', this.value)" style="width:100px"></td>`;
+                    
+                    for (let y = 0; y < 4; y++) {
+                        if (y < yearlyCosts.length) {
+                            html += `<td>${Math.round(yearlyCosts[y].cost).toLocaleString()}<br><small>(${yearlyCosts[y].year})</small></td>`;
+                        } else {
+                            html += `<td>-</td>`;
+                        }
                     }
+                    
+                    html += `<td><strong>${Math.round(totalCost).toLocaleString()}</strong></td>
+                        <td><input type="text" value="${escapeHtml(at.year)}" readonly style="width:70px"></td>
+                        <td><input type="text" value="${escapeHtml(at.remarks)}" onchange="updateAdminTech(${i}, 'remarks', this.value)" style="width:100px"></td>
+                        <td><button class="danger" onclick="removeAdminTech(${i})" style="padding:2px 6px">✗</button></td>
+                    </tr>`;
                 }
                 
-                html += `<td><strong>${Math.round(totalCost).toLocaleString()}</strong></td>
-                    <td><input type="text" value="${escapeHtml(at.year)}" onchange="updateAdminTech(${i}, 'year', this.value)" placeholder="2026" style="width:70px"></td>
-                    <td><input type="text" value="${escapeHtml(at.remarks)}" onchange="updateAdminTech(${i}, 'remarks', this.value)" style="width:100px"></td>
-                    <td><button class="danger" onclick="removeAdminTech(${i})" style="padding:2px 6px">✗</button></td>
-                </tr>`;
+                html += `</tbody></table>`;
+                html += `<button onclick="addAdminTechRow()">+ Add Admin/Technical Staff Training</button>`;
+                html += `<div class="cost-summary">
+                    <strong>B. TOTAL TRAINING COST FOR ADMINISTRATIVE & TECHNICAL STAFF:</strong> TZS ${Math.round(adminTechTotal).toLocaleString()}<br>
+                </div>`;
             }
-            
-            html += `</tbody></table>`;
-            html += `<button onclick="addAdminTechRow()">+ Add Admin/Technical Staff Training</button>`;
-            
-            // Admin/Technical Total
-            let adminTechTotal = 0;
-            for (const at of detailedLongTerm.adminTechnical) {
-                const months = parseInt(at.duration) || 0;
-                const yearlyTuition = parseFloat(at.yearlyTuition) || DEFAULT_YEARLY_TUITION;
-                const yearlyOther = parseFloat(at.yearlyOther) || DEFAULT_YEARLY_OTHER_COSTS;
-                const startYear = at.year || '2026';
-                const yearlyCosts = calculateYearlyCosts(months, yearlyTuition, yearlyOther, startYear);
-                adminTechTotal += yearlyCosts.reduce((sum, yc) => sum + yc.cost, 0);
-            }
-            
-            const grandTotal = academicTotal + adminTechTotal;
-            
-            html += `<div class="cost-summary">
-                <strong>A. TOTAL TRAINING COST FOR ACADEMIC STAFF:</strong> TZS ${Math.round(academicTotal).toLocaleString()}<br>
-                <strong>B. TOTAL TRAINING COST FOR ADMINISTRATIVE & TECHNICAL STAFF:</strong> TZS ${Math.round(adminTechTotal).toLocaleString()}<br>
-                <strong style="font-size:16px;">📊 TOTAL TRAINING BUDGET: TZS ${Math.round(grandTotal).toLocaleString()}</strong>
-            </div>`;
             
             html += `<button onclick="submitAllData()" ${isSubmitting ? 'disabled' : ''}>✓ SUBMIT ALL TRAINING NEEDS</button>`;
             html += `<button class="secondary" onclick="goToStep(3)">← Back</button>`;
@@ -479,15 +468,16 @@
     }
     
     // ============================================
-    // AUTO-POPULATE DETAILED PLAN FROM STEP 2
+    // AUTO-POPULATE DETAILED PLAN FROM STEP 2 DATA (READ-ONLY FIELDS)
     // ============================================
     function autoPopulateDetailedPlan() {
+        // Only populate if detailed arrays are empty AND we have long-term trainings
         if ((detailedLongTerm.academic.length === 0 && detailedLongTerm.adminTechnical.length === 0) && longTermTrainings.length > 0) {
             for (let i = 0; i < longTermTrainings.length; i++) {
                 const training = longTermTrainings[i];
                 if (!training.area) continue;
                 
-                // Determine start year
+                // Determine start year from checked checkbox
                 let startYear = '2026';
                 if (training.y2026) startYear = '2026';
                 else if (training.y2027) startYear = '2027';
@@ -509,21 +499,10 @@
                 
                 if (staffInfo.category === 'Academic Staff') {
                     detailedLongTerm.academic.push(entry);
-                } else {
+                } else if (staffInfo.category === 'Administrative Staff' || staffInfo.category === 'Technical Staff') {
                     detailedLongTerm.adminTechnical.push(entry);
                 }
             }
-        }
-    }
-    
-    function updateLongTermStartYear(index) {
-        const t = longTermTrainings[index];
-        if (t.y2026) {
-            longTermTrainings[index].startYear = '2026';
-        } else if (t.y2027) {
-            longTermTrainings[index].startYear = '2027';
-        } else if (t.y2028) {
-            longTermTrainings[index].startYear = '2028';
         }
     }
     
@@ -547,6 +526,9 @@
     }
     
     function nextToStep3() {
+        if (longTermTrainings.length === 0) {
+            showMessage('You haven\'t added any long-term training. Click "Submit" on the next page to finish.', true);
+        }
         currentStep = 3;
         render();
     }
@@ -571,7 +553,7 @@
     
     function updateLongTerm(index, field, value) {
         longTermTrainings[index][field] = value;
-        render();
+        // If user changes year, refresh the detailed plan on next step
     }
     
     function removeLongTerm(index) {
@@ -598,14 +580,21 @@
     }
     
     // ============================================
-    // DETAILED FUNCTIONS
+    // DETAILED ACADEMIC FUNCTIONS (Editable: Institution, Sponsor, Yearly Costs, Remarks)
     // ============================================
     function addAcademicRow() {
         detailedLongTerm.academic.push({
-            name: staffInfo.name || '', gender: staffInfo.gender === 'Male' ? 'M' : 'F',
-            position: staffInfo.position || '', course: '', institution: 'UDSM', sponsor: 'UDSM',
-            duration: 24, yearlyTuition: DEFAULT_YEARLY_TUITION, yearlyOther: DEFAULT_YEARLY_OTHER_COSTS,
-            year: '2026', remarks: ''
+            name: staffInfo.name || '',
+            gender: staffInfo.gender === 'Male' ? 'M' : 'F',
+            position: staffInfo.position || '',
+            course: '',
+            institution: 'UDSM',
+            sponsor: 'UDSM',
+            duration: 24,
+            yearlyTuition: DEFAULT_YEARLY_TUITION,
+            yearlyOther: DEFAULT_YEARLY_OTHER_COSTS,
+            year: '2026',
+            remarks: ''
         });
         render();
     }
@@ -620,12 +609,22 @@
         render();
     }
     
+    // ============================================
+    // DETAILED ADMIN/TECHNICAL FUNCTIONS
+    // ============================================
     function addAdminTechRow() {
         detailedLongTerm.adminTechnical.push({
-            name: staffInfo.name || '', gender: staffInfo.gender === 'Male' ? 'M' : 'F',
-            position: staffInfo.position || '', course: '', institution: 'UDSM', sponsor: 'UDSM',
-            duration: 24, yearlyTuition: DEFAULT_YEARLY_TUITION, yearlyOther: DEFAULT_YEARLY_OTHER_COSTS,
-            year: '2026', remarks: ''
+            name: staffInfo.name || '',
+            gender: staffInfo.gender === 'Male' ? 'M' : 'F',
+            position: staffInfo.position || '',
+            course: '',
+            institution: 'UDSM',
+            sponsor: 'UDSM',
+            duration: 24,
+            yearlyTuition: DEFAULT_YEARLY_TUITION,
+            yearlyOther: DEFAULT_YEARLY_OTHER_COSTS,
+            year: '2026',
+            remarks: ''
         });
         render();
     }
@@ -641,10 +640,45 @@
     }
     
     // ============================================
-    // SUBMIT FUNCTION    // ============================================
+    // SUBMIT FUNCTIONS
+    // ============================================
+    async function submitOnlyShortTerm() {
+        if (isSubmitting) return;
+        isSubmitting = true;
+        
+        const payload = {
+            staffInfo: staffInfo,
+            longTermTrainings: [],
+            shortTermTrainings: shortTermTrainings,
+            detailedLongTerm: { academic: [], adminTechnical: [] },
+            submittedAt: new Date().toISOString()
+        };
+        
+        try {
+            await fetch(WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            showMessage('✓ Training needs submitted successfully!');
+            currentStep = 1;
+            staffInfo = {};
+            longTermTrainings = [];
+            shortTermTrainings = [];
+            detailedLongTerm = { academic: [], adminTechnical: [] };
+            isSubmitting = false;
+            render();
+        } catch (error) {
+            showMessage('Error submitting form. Please try again.', true);
+            isSubmitting = false;
+            render();
+        }
+    }
+    
     async function submitAllData() {
         if (isSubmitting) return;
-        
         isSubmitting = true;
         
         const payload = {
@@ -663,8 +697,7 @@
                 body: JSON.stringify(payload)
             });
             
-            showMessage('✓ Training needs submitted successfully! All data saved to Google Sheet.');
-            
+            showMessage('✓ Training needs submitted successfully!');
             currentStep = 1;
             staffInfo = {};
             longTermTrainings = [];
@@ -672,15 +705,14 @@
             detailedLongTerm = { academic: [], adminTechnical: [] };
             isSubmitting = false;
             render();
-            
         } catch (error) {
-            console.error('Submission error:', error);
             showMessage('Error submitting form. Please try again.', true);
             isSubmitting = false;
             render();
         }
     }
     
+    // Initialize the form
     render();
 </script>
 </body>
