@@ -240,7 +240,7 @@
     // ============================================
     // GOOGLE APPS SCRIPT WEB APP URL
     // ============================================
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby_r1giV-FS_hjGFLZrkQk6rH-5MGqFr7UntSKJBfX9nfkTia1HdwcvUcQzuQEvindONQ/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyqnUJRtLSrX7boOlpyRNeHwzWxgt6UzSMPvYDuSIjglgQYh0q65r3vQJbp_5tWCHQoOw/exec';
     
     // ============================================
     // STATE
@@ -283,9 +283,9 @@
     }
     
     function calculateYearlyCosts(months, yearlyTuition, yearlyOther, startYear) {
-        const yearlyCost = yearlyTuition + yearlyOther;
+        const yearlyCost = (parseFloat(yearlyTuition) || 0) + (parseFloat(yearlyOther) || 0);
         const results = [];
-        let remainingMonths = months;
+        let remainingMonths = parseInt(months) || 0;
         let yearIndex = 0;
         while (remainingMonths > 0 && yearIndex < 4) {
             const monthsInYear = Math.min(remainingMonths, 12);
@@ -372,6 +372,52 @@
                 detailedLongTerm.academic.push(entry);
             } else {
                 detailedLongTerm.adminTechnical.push(entry);
+            }
+        }
+    }
+    
+    // ============================================
+    // UPDATE FUNCTIONS (no re-render)
+    // ============================================
+    function updateDetailedEntryField(index, field, value, isAcademic) {
+        if (isAcademic) {
+            if (detailedLongTerm.academic[index]) {
+                detailedLongTerm.academic[index][field] = value;
+            }
+        } else {
+            if (detailedLongTerm.adminTechnical[index]) {
+                detailedLongTerm.adminTechnical[index][field] = value;
+            }
+        }
+        // Update the displayed total cost without full re-render
+        updateDetailedRowDisplay(index, isAcademic);
+    }
+    
+    function updateDetailedRowDisplay(index, isAcademic) {
+        const entry = isAcademic ? detailedLongTerm.academic[index] : detailedLongTerm.adminTechnical[index];
+        if (!entry) return;
+        
+        const months = parseInt(entry.duration) || 0;
+        const yTuition = parseFloat(entry.yearlyTuition) || 0;
+        const yOther = parseFloat(entry.yearlyOther) || 0;
+        const costs = calculateYearlyCosts(months, yTuition, yOther, entry.year || '2026');
+        const rowTotal = costs.reduce((s, c) => s + c.cost, 0);
+        
+        // Find the total cell and update it
+        const totalCell = document.getElementById(`total_${isAcademic}_${index}`);
+        if (totalCell) {
+            totalCell.innerText = (yTuition > 0 && yOther > 0) ? Math.round(rowTotal).toLocaleString() : '-';
+        }
+        
+        // Update year cost cells
+        for (let y = 0; y < 4; y++) {
+            const yearCell = document.getElementById(`year_${isAcademic}_${index}_${y}`);
+            if (yearCell) {
+                if (y < costs.length && yTuition > 0 && yOther > 0) {
+                    yearCell.innerHTML = `${Math.round(costs[y].cost).toLocaleString()}<br><small>Year ${y+1}</small>`;
+                } else {
+                    yearCell.innerHTML = '-';
+                }
             }
         }
     }
@@ -478,9 +524,14 @@
                 render();
                 return;
             }
-            refreshDetailedPlan();
             
+            // Only refresh detailed plan if it's empty
             const isAcademic = (staffInfo.category === 'Academic Staff');
+            const currentEntries = isAcademic ? detailedLongTerm.academic : detailedLongTerm.adminTechnical;
+            if (currentEntries.length === 0) {
+                refreshDetailedPlan();
+            }
+            
             const entries = isAcademic ? detailedLongTerm.academic : detailedLongTerm.adminTechnical;
             
             html += `<h2>💰 DETAILED FINANCIAL PLAN</h2>`;
@@ -488,7 +539,8 @@
             html += `<h3>${isAcademic ? 'ACADEMIC STAFF' : 'ADMINISTRATIVE & TECHNICAL STAFF'}</h3>`;
             
             if (entries.length > 0) {
-                html += `<table><thead>；
+                html += `<table id="detailedTable">`;
+                html += `<thead><tr>
                     <th>S/N</th><th>Name</th><th>Gender</th><th>Position</th><th>Course/Programme *</th>
                     <th>Institution *</th><th>Sponsor</th><th>Duration(m)</th>
                     <th>Yearly Tuition (TZS) *</th><th>Yearly Other Costs (TZS) *</th>
@@ -506,35 +558,35 @@
                     const rowTotal = costs.reduce((s, c) => s + c.cost, 0);
                     totalCost += rowTotal;
                     
-                    html += `<tr>
+                    html += `<tr id="row_${isAcademic}_${i}">
                         <td>${i+1}</td>
                         <td><input type="text" value="${escapeHtml(a.name)}" readonly style="width:100px"></td>
                         <td><input type="text" value="${a.gender === 'M' ? 'Male' : 'Female'}" readonly style="width:60px"></td>
                         <td><input type="text" value="${escapeHtml(a.position)}" readonly style="width:90px"></td>
-                        <td><input type="text" value="${escapeHtml(a.course)}" onchange="updateDetailedEntry(${i}, 'course', this.value, ${isAcademic})" placeholder="Required" style="width:130px" required></td>
-                        <td><input type="text" value="${escapeHtml(a.institution)}" onchange="updateDetailedEntry(${i}, 'institution', this.value, ${isAcademic})" placeholder="Required" style="width:90px" required></td>
-                        <td><select onchange="updateDetailedEntry(${i}, 'sponsor', this.value, ${isAcademic})"><option ${a.sponsor === 'UDSM' ? 'selected' : ''}>UDSM</option><option ${a.sponsor === 'NIF' ? 'selected' : ''}>NIF</option><option ${a.sponsor === 'Secure D' ? 'selected' : ''}>Secure D</option><option ${a.sponsor === 'Other' ? 'selected' : ''}>Other</option></select></td>
+                        <td><input type="text" value="${escapeHtml(a.course)}" onchange="updateDetailedEntryField(${i}, 'course', this.value, ${isAcademic})" placeholder="Required" style="width:130px"></td>
+                        <td><input type="text" value="${escapeHtml(a.institution)}" onchange="updateDetailedEntryField(${i}, 'institution', this.value, ${isAcademic})" placeholder="Required" style="width:90px"></td>
+                        <td><select onchange="updateDetailedEntryField(${i}, 'sponsor', this.value, ${isAcademic})"><option ${a.sponsor === 'UDSM' ? 'selected' : ''}>UDSM</option><option ${a.sponsor === 'NIF' ? 'selected' : ''}>NIF</option><option ${a.sponsor === 'Secure D' ? 'selected' : ''}>Secure D</option><option ${a.sponsor === 'Other' ? 'selected' : ''}>Other</option></select></td>
                         <td><input type="number" value="${a.duration || ''}" readonly style="width:60px"></td>
-                        <td><input type="number" value="${a.yearlyTuition || ''}" onchange="updateDetailedEntry(${i}, 'yearlyTuition', this.value, ${isAcademic})" placeholder="Required" style="width:100px" required></td>
-                        <td><input type="number" value="${a.yearlyOther || ''}" onchange="updateDetailedEntry(${i}, 'yearlyOther', this.value, ${isAcademic})" placeholder="Required" style="width:100px" required></td>`;
+                        <td><input type="number" value="${a.yearlyTuition || ''}" onchange="updateDetailedEntryField(${i}, 'yearlyTuition', this.value, ${isAcademic})" placeholder="Required" style="width:100px"></td>
+                        <td><input type="number" value="${a.yearlyOther || ''}" onchange="updateDetailedEntryField(${i}, 'yearlyOther', this.value, ${isAcademic})" placeholder="Required" style="width:100px"></td>`;
                     
                     for (let y = 0; y < 4; y++) {
                         if (y < costs.length && yTuition > 0 && yOther > 0) {
-                            html += `<td>${Math.round(costs[y].cost).toLocaleString()}<br><small>Year ${y+1}</small></td>`;
+                            html += `<td id="year_${isAcademic}_${i}_${y}">${Math.round(costs[y].cost).toLocaleString()}<br><small>Year ${y+1}</small></td>`;
                         } else {
-                            html += `<td>-</td>`;
+                            html += `<td id="year_${isAcademic}_${i}_${y}">-</td>`;
                         }
                     }
                     
-                    html += `<td><strong>${yTuition > 0 && yOther > 0 ? Math.round(rowTotal).toLocaleString() : '-'}</strong></td>
+                    html += `<td id="total_${isAcademic}_${i}"><strong>${yTuition > 0 && yOther > 0 ? Math.round(rowTotal).toLocaleString() : '-'}</strong></td>
                         <td><input type="text" value="${escapeHtml(a.year)}" readonly style="width:70px"></td>
-                        <td><input type="text" value="${escapeHtml(a.remarks)}" onchange="updateDetailedEntry(${i}, 'remarks', this.value, ${isAcademic})" placeholder="Optional" style="width:80px"></td>
+                        <td><input type="text" value="${escapeHtml(a.remarks)}" onchange="updateDetailedEntryField(${i}, 'remarks', this.value, ${isAcademic})" placeholder="Optional" style="width:80px"></td>
                         <td><button class="danger" onclick="removeDetailedEntry(${i}, ${isAcademic})" style="padding:2px 6px">✗</button></td>
                     </tr>`;
                 }
-                html += `</tbody><tr>`;
+                html += `</tbody></table>`;
                 html += `<div class="button-group-left"><button class="add-btn" onclick="addDetailedEntry(${isAcademic})">+ Add Training</button></div>`;
-                html += `<div class="cost-summary"><strong>TOTAL COST FOR ${isAcademic ? 'ACADEMIC' : 'ADMINISTRATIVE & TECHNICAL'} STAFF:</strong> TZS ${totalCost.toLocaleString()}</div>`;
+                html += `<div class="cost-summary"><strong>TOTAL COST FOR ${isAcademic ? 'ACADEMIC' : 'ADMINISTRATIVE & TECHNICAL'} STAFF:</strong> TZS <span id="grandTotal">${totalCost.toLocaleString()}</span></div>`;
             } else {
                 html += `<div class="info-banner">No training records found. Please go back to add trainings.</div>`;
             }
@@ -571,13 +623,11 @@
         if (longTermTrainings.length > 0 && !validateLongTermTrainings()) {
             return;
         }
-        refreshDetailedPlan();
         currentStep = 3;
         render();
     }
     
     function goToStep4() {
-        refreshDetailedPlan();
         currentStep = 4;
         render();
     }
@@ -600,12 +650,10 @@
     
     function updateLongTerm(index, field, value) {
         longTermTrainings[index][field] = value;
-        render();
     }
     
     function updateLongTermStartYear(index, year) {
         longTermTrainings[index].startYear = year;
-        render();
     }
     
     function removeLongTerm(index) {
@@ -620,7 +668,6 @@
     
     function updateShortTerm(index, field, value) {
         shortTermTrainings[index][field] = value;
-        render();
     }
     
     function removeShortTerm(index) {
@@ -646,15 +693,6 @@
             detailedLongTerm.academic.push(newEntry);
         } else {
             detailedLongTerm.adminTechnical.push(newEntry);
-        }
-        render();
-    }
-    
-    function updateDetailedEntry(index, field, value, isAcademic) {
-        if (isAcademic) {
-            detailedLongTerm.academic[index][field] = value;
-        } else {
-            detailedLongTerm.adminTechnical[index][field] = value;
         }
         render();
     }
@@ -686,9 +724,7 @@
     async function submitAllData() {
         if (isSubmitting) return;
         
-        // Validate detailed entries before submission
         if (!validateDetailedEntries()) {
-            isSubmitting = false;
             return;
         }
         
