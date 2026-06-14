@@ -13,7 +13,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 1400px;
+            max-width: 1300px;
             margin: 0 auto;
             background: white;
             border-radius: 16px;
@@ -71,13 +71,11 @@
             width: 100%;
             border-collapse: collapse;
             margin: 15px 0;
-            font-size: 12px;
-            overflow-x: auto;
-            display: block;
+            font-size: 13px;
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 10px;
             text-align: left;
             vertical-align: top;
         }
@@ -85,8 +83,6 @@
             background: #1a73e8;
             color: white;
             font-weight: 600;
-            position: sticky;
-            top: 0;
         }
         tr:nth-child(even) {
             background: #f9f9f9;
@@ -157,6 +153,7 @@
             display: flex;
             gap: 15px;
             align-items: center;
+            flex-wrap: wrap;
         }
         .radio-group label {
             display: inline-flex;
@@ -169,9 +166,39 @@
             width: auto;
             margin: 0;
         }
+        .training-card {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .training-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #1a73e8;
+        }
+        .training-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .training-row .field {
+            flex: 1;
+            min-width: 150px;
+        }
+        .training-row .field label {
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        hr {
+            margin: 20px 0;
+        }
         @media (max-width: 768px) {
             .container { padding: 15px; }
-            th, td { font-size: 10px; padding: 4px; }
+            th, td { font-size: 11px; padding: 6px; }
+            .training-row { flex-direction: column; }
         }
     </style>
 </head>
@@ -187,12 +214,11 @@
     // ============================================
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwt6swyQz2N3PXIwm7hzi9tGl-Kst2RDUFqhLPqYkEfjIxlJR7pDyxs7Z_y-d4FANdC/exec';
     
-    // Default costs
     const DEFAULT_YEARLY_TUITION = 3500000;
     const DEFAULT_YEARLY_OTHER_COSTS = 5000000;
     
     // ============================================
-    // STATE MANAGEMENT
+    // STATE
     // ============================================
     let currentStep = 1;
     let staffInfo = {};
@@ -211,9 +237,6 @@
         'Leadership & Management', 'Customer Care', 'Other'
     ];
     
-    // ============================================
-    // HELPER FUNCTIONS
-    // ============================================
     function escapeHtml(str) {
         if (!str) return '';
         return String(str).replace(/[&<>]/g, function(m) {
@@ -237,19 +260,13 @@
         const yearlyCost = yearlyTuition + yearlyOther;
         const results = [];
         const startYearNum = parseInt(startYear);
-        const academicYears = [
-            `${startYearNum}/${startYearNum + 1}`,
-            `${startYearNum + 1}/${startYearNum + 2}`,
-            `${startYearNum + 2}/${startYearNum + 3}`,
-            `${startYearNum + 3}/${startYearNum + 4}`
-        ];
         let remainingMonths = months;
         let yearIndex = 0;
         while (remainingMonths > 0 && yearIndex < 4) {
             const monthsInYear = Math.min(remainingMonths, 12);
             const proportion = monthsInYear / 12;
             const cost = yearlyCost * proportion;
-            results.push({ year: academicYears[yearIndex], months: monthsInYear, cost: Math.round(cost) });
+            results.push({ cost: Math.round(cost), yearIndex: yearIndex });
             remainingMonths -= monthsInYear;
             yearIndex++;
         }
@@ -260,19 +277,19 @@
         for (let i = 0; i < longTermTrainings.length; i++) {
             const t = longTermTrainings[i];
             if (!t.area) {
-                showMessage(`Long-Term Training #${i+1}: Please select a Training Area`, true);
+                showMessage(`Training #${i+1}: Please select a Training Area`, true);
                 return false;
             }
             if (!t.duration || t.duration <= 0) {
-                showMessage(`Long-Term Training #${i+1}: Please enter Duration in months`, true);
+                showMessage(`Training #${i+1}: Please enter Duration in months`, true);
                 return false;
             }
             if (!t.startYear) {
-                showMessage(`Long-Term Training #${i+1}: Please select a Start Year`, true);
+                showMessage(`Training #${i+1}: Please select a Start Year`, true);
                 return false;
             }
             if (!t.outcome) {
-                showMessage(`Long-Term Training #${i+1}: Please enter Expected Outcome`, true);
+                showMessage(`Training #${i+1}: Please enter Expected Outcome`, true);
                 return false;
             }
         }
@@ -287,7 +304,6 @@
         
         for (let training of longTermTrainings) {
             if (!training.area) continue;
-            
             const entry = {
                 name: staffInfo.name || '',
                 gender: staffInfo.gender === 'Male' ? 'M' : 'F',
@@ -301,7 +317,6 @@
                 year: training.startYear || '2026',
                 remarks: training.remarks || ''
             };
-            
             if (isAcademic) {
                 detailedLongTerm.academic.push(entry);
             } else {
@@ -311,7 +326,7 @@
     }
     
     // ============================================
-    // RENDER LOGIC
+    // RENDER
     // ============================================
     function render() {
         const container = document.getElementById('formContent');
@@ -328,61 +343,58 @@
             html += `<div class="button-group"><button onclick="saveStep1()">Next →</button></div>`;
         }
         
-        // STEP 2: Long-Term Training (Radio buttons for single year selection)
+        // STEP 2: Long-Term Training (Card layout for better arrangement)
         else if (currentStep === 2) {
             html += `<h2>📚 LONG-TERM TRAINING NEEDS</h2>`;
             html += `<div class="info-banner">⚠️ Select ONLY ONE start year per training. Duration in months is required.</div>`;
-            html += `<td><thead><tr>
-                <th>S/N</th><th>Training Area</th><th>Start Year (Select ONE)</th><th>Duration (Months)</th>
-                <th>Expected Outcome</th><th>Remarks</th><th></th>
-            </tr></thead><tbody id="longTermTableBody">`;
             
             for (let i = 0; i < longTermTrainings.length; i++) {
                 const t = longTermTrainings[i];
-                html += `<tr>
-                    <td>${i+1}</td>
-                    <td><input type="text" value="${escapeHtml(t.area)}" onchange="updateLongTerm(${i}, 'area', this.value)" style="width:160px" list="longTermList"><datalist id="longTermList">${longTermAreas.map(a => `<option>${a}</option>`).join('')}</datalist></td>
-                    <td style="min-width:180px">
-                        <div class="radio-group">
-                            <label><input type="radio" name="year_${i}" value="2026" ${t.startYear === '2026' ? 'checked' : ''} onchange="updateLongTermStartYear(${i}, '2026')"> 2026/27</label>
-                            <label><input type="radio" name="year_${i}" value="2027" ${t.startYear === '2027' ? 'checked' : ''} onchange="updateLongTermStartYear(${i}, '2027')"> 2027/28</label>
-                            <label><input type="radio" name="year_${i}" value="2028" ${t.startYear === '2028' ? 'checked' : ''} onchange="updateLongTermStartYear(${i}, '2028')"> 2028/29</label>
-                        </div>
-                    </td>
-                    <td><input type="number" value="${t.duration || ''}" onchange="updateLongTerm(${i}, 'duration', this.value)" style="width:80px" placeholder="months" required></td>
-                    <td><input type="text" value="${escapeHtml(t.outcome)}" onchange="updateLongTerm(${i}, 'outcome', this.value)" style="width:180px"></td>
-                    <td><input type="text" value="${escapeHtml(t.remarks)}" onchange="updateLongTerm(${i}, 'remarks', this.value)" style="width:140px"></td>
-                    <td><button class="danger" onclick="removeLongTerm(${i})" style="padding:4px 8px">✗</button></td>
-                </tr>`;
+                html += `<div class="training-card">`;
+                html += `<div class="training-header">Training #${i+1}</div>`;
+                html += `<div class="training-row">`;
+                html += `<div class="field"><label>Training Area *</label><input type="text" value="${escapeHtml(t.area)}" onchange="updateLongTerm(${i}, 'area', this.value)" list="longTermList" style="width:100%"><datalist id="longTermList">${longTermAreas.map(a => `<option>${a}</option>`).join('')}</datalist></div>`;
+                html += `<div class="field"><label>Duration (Months) *</label><input type="number" value="${t.duration || ''}" onchange="updateLongTerm(${i}, 'duration', this.value)" placeholder="e.g., 24" style="width:100%"></div>`;
+                html += `</div><div class="training-row">`;
+                html += `<div class="field"><label>Start Year (Select ONE) *</label><div class="radio-group">`;
+                html += `<label><input type="radio" name="year_${i}" value="2026" ${t.startYear === '2026' ? 'checked' : ''} onchange="updateLongTermStartYear(${i}, '2026')"> 2026/27</label>`;
+                html += `<label><input type="radio" name="year_${i}" value="2027" ${t.startYear === '2027' ? 'checked' : ''} onchange="updateLongTermStartYear(${i}, '2027')"> 2027/28</label>`;
+                html += `<label><input type="radio" name="year_${i}" value="2028" ${t.startYear === '2028' ? 'checked' : ''} onchange="updateLongTermStartYear(${i}, '2028')"> 2028/29</label>`;
+                html += `</div></div>`;
+                html += `<div class="field"><label>Expected Outcome *</label><input type="text" value="${escapeHtml(t.outcome)}" onchange="updateLongTerm(${i}, 'outcome', this.value)" placeholder="What will you achieve?" style="width:100%"></div>`;
+                html += `</div><div class="training-row">`;
+                html += `<div class="field"><label>Remarks</label><input type="text" value="${escapeHtml(t.remarks)}" onchange="updateLongTerm(${i}, 'remarks', this.value)" placeholder="Optional" style="width:100%"></div>`;
+                html += `<div class="field"><button class="danger" onclick="removeLongTerm(${i})" style="margin-top:22px">✗ Remove</button></div>`;
+                html += `</div></div>`;
             }
-            html += `</tbody></table>`;
+            
             html += `<div class="button-group-left"><button class="add-btn" onclick="addLongTermRow()">+ Add Training</button></div>`;
             html += `<div class="button-group"><button onclick="goToStep3()">Next →</button><button class="secondary" onclick="goToStep(1)">← Back</button></div>`;
         }
         
-        // STEP 3: Short-Term Training (Checkboxes for multiple years)
+        // STEP 3: Short-Term Training
         else if (currentStep === 3) {
             html += `<h2>🛠️ SHORT-TERM TRAINING NEEDS</h2>`;
             html += `<div class="info-banner">✅ You can select multiple years for each short-term training.</div>`;
-            html += `<table><thead><tr>
-                <th>S/N</th><th>Training Area</th><th>2026/27</th><th>2027/28</th><th>2028/29</th>
-                <th>Expected Outcome</th><th>Remarks</th><th></th>
-            </tr></thead><tbody id="shortTermTableBody">`;
             
             for (let i = 0; i < shortTermTrainings.length; i++) {
                 const t = shortTermTrainings[i];
-                html += `<tr>
-                    <td>${i+1}</td>
-                    <td><input type="text" value="${escapeHtml(t.area)}" onchange="updateShortTerm(${i}, 'area', this.value)" style="width:200px" list="shortTermList"><datalist id="shortTermList">${shortTermAreas.map(a => `<option>${a}</option>`).join('')}</datalist></td>
-                    <td><input type="checkbox" ${t.y2026 ? 'checked' : ''} onchange="updateShortTerm(${i}, 'y2026', this.checked)" style="width:20px"></td>
-                    <td><input type="checkbox" ${t.y2027 ? 'checked' : ''} onchange="updateShortTerm(${i}, 'y2027', this.checked)" style="width:20px"></td>
-                    <td><input type="checkbox" ${t.y2028 ? 'checked' : ''} onchange="updateShortTerm(${i}, 'y2028', this.checked)" style="width:20px"></td>
-                    <td><input type="text" value="${escapeHtml(t.outcome)}" onchange="updateShortTerm(${i}, 'outcome', this.value)" style="width:180px"></td>
-                    <td><input type="text" value="${escapeHtml(t.remarks)}" onchange="updateShortTerm(${i}, 'remarks', this.value)" style="width:150px"></td>
-                    <td><button class="danger" onclick="removeShortTerm(${i})" style="padding:4px 8px">✗</button></td>
-                </tr>`;
+                html += `<div class="training-card">`;
+                html += `<div class="training-header">Training #${i+1}</div>`;
+                html += `<div class="training-row">`;
+                html += `<div class="field"><label>Training Area *</label><input type="text" value="${escapeHtml(t.area)}" onchange="updateShortTerm(${i}, 'area', this.value)" list="shortTermList" style="width:100%"><datalist id="shortTermList">${shortTermAreas.map(a => `<option>${a}</option>`).join('')}</datalist></div>`;
+                html += `<div class="field"><label>Select Years (can select multiple)</label><div class="radio-group">`;
+                html += `<label><input type="checkbox" ${t.y2026 ? 'checked' : ''} onchange="updateShortTerm(${i}, 'y2026', this.checked)"> 2026/27</label>`;
+                html += `<label><input type="checkbox" ${t.y2027 ? 'checked' : ''} onchange="updateShortTerm(${i}, 'y2027', this.checked)"> 2027/28</label>`;
+                html += `<label><input type="checkbox" ${t.y2028 ? 'checked' : ''} onchange="updateShortTerm(${i}, 'y2028', this.checked)"> 2028/29</label>`;
+                html += `</div></div>`;
+                html += `</div><div class="training-row">`;
+                html += `<div class="field"><label>Expected Outcome *</label><input type="text" value="${escapeHtml(t.outcome)}" onchange="updateShortTerm(${i}, 'outcome', this.value)" placeholder="What will you achieve?" style="width:100%"></div>`;
+                html += `<div class="field"><label>Remarks</label><input type="text" value="${escapeHtml(t.remarks)}" onchange="updateShortTerm(${i}, 'remarks', this.value)" placeholder="Optional" style="width:100%"></div>`;
+                html += `<div class="field"><button class="danger" onclick="removeShortTerm(${i})" style="margin-top:22px">✗ Remove</button></div>`;
+                html += `</div></div>`;
             }
-            html += `</tbody><table>`;
+            
             html += `<div class="button-group-left"><button class="add-btn" onclick="addShortTermRow()">+ Add Training</button></div>`;
             
             if (longTermTrainings.length > 0) {
@@ -392,28 +404,20 @@
             }
         }
         
-        // STEP 4: Detailed Plan (Same table for both Academic and Admin/Technical)
+        // STEP 4: Detailed Plan
         else if (currentStep === 4 && longTermTrainings.length > 0) {
-            // Validate before proceeding
             if (!validateLongTermTrainings()) {
                 currentStep = 2;
                 render();
                 return;
             }
-            
             refreshDetailedPlan();
             
             const isAcademic = (staffInfo.category === 'Academic Staff');
+            const entries = isAcademic ? detailedLongTerm.academic : detailedLongTerm.adminTechnical;
             
             html += `<h2>💰 DETAILED FINANCIAL PLAN</h2>`;
-            html += `<div class="info-banner">📊 Costs are calculated based on duration (months) and start year.</div>`;
-            
-            let totalCost = 0;
-            
-            // Same table structure for BOTH Academic and Admin/Technical
             html += `<h3>${isAcademic ? 'ACADEMIC STAFF' : 'ADMINISTRATIVE & TECHNICAL STAFF'}</h3>`;
-            
-            const entries = isAcademic ? detailedLongTerm.academic : detailedLongTerm.adminTechnical;
             
             if (entries.length > 0) {
                 html += `<table><thead>；
@@ -422,8 +426,9 @@
                     <th>Yearly Tuition</th><th>Yearly Other</th>
                     <th>Year 1</th><th>Year 2</th><th>Year 3</th><th>Year 4</th>
                     <th>Total</th><th>Start Year</th><th>Remarks</th><th></th>
-                </tr></thead><tbody>`;
+                </table></thead><tbody>`;
                 
+                let totalCost = 0;
                 for (let i = 0; i < entries.length; i++) {
                     const a = entries[i];
                     const months = parseInt(a.duration) || 0;
@@ -439,30 +444,30 @@
                         <td><input type="text" value="${a.gender === 'M' ? 'Male' : 'Female'}" readonly style="width:60px"></td>
                         <td><input type="text" value="${escapeHtml(a.position)}" readonly style="width:90px"></td>
                         <td><input type="text" value="${escapeHtml(a.course)}" readonly style="width:130px"></td>
-                        <td><input type="text" value="${escapeHtml(a.institution)}" onchange="updateEntry(${i}, 'institution', this.value, ${isAcademic})" style="width:90px"></td>
-                        <td><select onchange="updateEntry(${i}, 'sponsor', this.value, ${isAcademic})"><option ${a.sponsor === 'UDSM' ? 'selected' : ''}>UDSM</option><option ${a.sponsor === 'NIF' ? 'selected' : ''}>NIF</option><option ${a.sponsor === 'Secure D' ? 'selected' : ''}>Secure D</option><option ${a.sponsor === 'Other' ? 'selected' : ''}>Other</option></select></td>
+                        <td><input type="text" value="${escapeHtml(a.institution)}" onchange="updateDetailedEntry(${i}, 'institution', this.value, ${isAcademic})" style="width:90px"></td>
+                        <td><select onchange="updateDetailedEntry(${i}, 'sponsor', this.value, ${isAcademic})"><option ${a.sponsor === 'UDSM' ? 'selected' : ''}>UDSM</option><option ${a.sponsor === 'NIF' ? 'selected' : ''}>NIF</option><option ${a.sponsor === 'Secure D' ? 'selected' : ''}>Secure D</option><option ${a.sponsor === 'Other' ? 'selected' : ''}>Other</option></select></td>
                         <td><input type="number" value="${a.duration || ''}" readonly style="width:60px"></td>
-                        <td><input type="number" value="${a.yearlyTuition || DEFAULT_YEARLY_TUITION}" onchange="updateEntry(${i}, 'yearlyTuition', this.value, ${isAcademic})" style="width:90px"></td>
-                        <td><input type="number" value="${a.yearlyOther || DEFAULT_YEARLY_OTHER_COSTS}" onchange="updateEntry(${i}, 'yearlyOther', this.value, ${isAcademic})" style="width:90px"></td>`;
+                        <td><input type="number" value="${a.yearlyTuition || DEFAULT_YEARLY_TUITION}" onchange="updateDetailedEntry(${i}, 'yearlyTuition', this.value, ${isAcademic})" style="width:90px"></td>
+                        <td><input type="number" value="${a.yearlyOther || DEFAULT_YEARLY_OTHER_COSTS}" onchange="updateDetailedEntry(${i}, 'yearlyOther', this.value, ${isAcademic})" style="width:90px"></td>`;
                     
                     for (let y = 0; y < 4; y++) {
-                        if (y < costs.length) html += `<td>${Math.round(costs[y].cost).toLocaleString()}<br><small>(${costs[y].year})</small></td>`;
+                        if (y < costs.length) html += `<td>${Math.round(costs[y].cost).toLocaleString()}<br><small>Year ${y+1}</small></td>`;
                         else html += `<td>-</td>`;
                     }
                     
                     html += `<td><strong>${Math.round(rowTotal).toLocaleString()}</strong></td>
                         <td><input type="text" value="${escapeHtml(a.year)}" readonly style="width:70px"></td>
-                        <td><input type="text" value="${escapeHtml(a.remarks)}" onchange="updateEntry(${i}, 'remarks', this.value, ${isAcademic})" style="width:80px"></td>
-                        <td><button class="danger" onclick="removeEntry(${i}, ${isAcademic})" style="padding:2px 6px">✗</button></td>
+                        <td><input type="text" value="${escapeHtml(a.remarks)}" onchange="updateDetailedEntry(${i}, 'remarks', this.value, ${isAcademic})" style="width:80px"></td>
+                        <td><button class="danger" onclick="removeDetailedEntry(${i}, ${isAcademic})" style="padding:2px 6px">✗</button></td>
                     </tr>`;
                 }
-                html += `</tbody><table>`;
-                html += `<div class="button-group-left"><button class="add-btn" onclick="addEntry(${isAcademic})">+ Add Training</button></div>`;
+                html += `</tbody></table>`;
+                html += `<div class="button-group-left"><button class="add-btn" onclick="addDetailedEntry(${isAcademic})">+ Add Training</button></div>`;
+                html += `<div class="cost-summary"><strong>TOTAL COST FOR ${isAcademic ? 'ACADEMIC' : 'ADMINISTRATIVE & TECHNICAL'} STAFF:</strong> TZS ${Math.round(totalCost).toLocaleString()}</div>`;
             } else {
-                html += `<div class="info-banner">No long-term training records found. Please go back to add trainings.</div>`;
+                html += `<div class="info-banner">No training records found. Please go back to add trainings.</div>`;
             }
             
-            html += `<div class="cost-summary"><strong>TOTAL COST FOR ${isAcademic ? 'ACADEMIC' : 'ADMINISTRATIVE & TECHNICAL'} STAFF:</strong> TZS ${Math.round(totalCost).toLocaleString()}</div>`;
             html += `<div class="button-group"><button class="success" onclick="submitAllData()" ${isSubmitting ? 'disabled' : ''}>✓ SUBMIT</button><button class="secondary" onclick="goToStep(3)">← Back</button></div>`;
         }
         
@@ -470,7 +475,7 @@
     }
     
     // ============================================
-    // STEP FUNCTIONS
+    // FUNCTIONS
     // ============================================
     function saveStep1() {
         const name = document.getElementById('staffName')?.value.trim();
@@ -492,7 +497,7 @@
     }
     
     function goToStep3() {
-        if (!validateLongTermTrainings()) {
+        if (longTermTrainings.length > 0 && !validateLongTermTrainings()) {
             return;
         }
         refreshDetailedPlan();
@@ -506,9 +511,6 @@
         render();
     }
     
-    // ============================================
-    // LONG-TERM FUNCTIONS (Radio buttons for single year)
-    // ============================================
     function addLongTermRow() {
         longTermTrainings.push({ area: '', startYear: '', duration: '', outcome: '', remarks: '' });
         render();
@@ -521,7 +523,6 @@
     
     function updateLongTermStartYear(index, year) {
         longTermTrainings[index].startYear = year;
-        // Uncheck other radios visually by re-rendering
         render();
     }
     
@@ -530,9 +531,6 @@
         render();
     }
     
-    // ============================================
-    // SHORT-TERM FUNCTIONS (Checkboxes for multiple years)
-    // ============================================
     function addShortTermRow() {
         shortTermTrainings.push({ area: '', y2026: false, y2027: false, y2028: false, outcome: '', remarks: '' });
         render();
@@ -548,10 +546,7 @@
         render();
     }
     
-    // ============================================
-    // DETAILED ENTRY FUNCTIONS
-    // ============================================
-    function addEntry(isAcademic) {
+    function addDetailedEntry(isAcademic) {
         const newEntry = {
             name: staffInfo.name || '',
             gender: staffInfo.gender === 'Male' ? 'M' : 'F',
@@ -565,7 +560,6 @@
             year: '2026',
             remarks: ''
         };
-        
         if (isAcademic) {
             detailedLongTerm.academic.push(newEntry);
         } else {
@@ -574,7 +568,7 @@
         render();
     }
     
-    function updateEntry(index, field, value, isAcademic) {
+    function updateDetailedEntry(index, field, value, isAcademic) {
         if (isAcademic) {
             detailedLongTerm.academic[index][field] = value;
         } else {
@@ -583,7 +577,7 @@
         render();
     }
     
-    function removeEntry(index, isAcademic) {
+    function removeDetailedEntry(index, isAcademic) {
         if (isAcademic) {
             detailedLongTerm.academic.splice(index, 1);
         } else {
@@ -592,9 +586,6 @@
         render();
     }
     
-    // ============================================
-    // SUBMIT FUNCTIONS
-    // ============================================
     async function submitOnlyShortTerm() {
         if (isSubmitting) return;
         isSubmitting = true;
@@ -603,8 +594,7 @@
             await fetch(WEB_APP_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) }); 
             showMessage('✓ Submitted successfully!'); 
             resetForm(); 
-        }
-        catch(e) { 
+        } catch(e) { 
             showMessage('Error submitting', true); 
             isSubmitting = false; 
             render(); 
@@ -619,8 +609,7 @@
             await fetch(WEB_APP_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) }); 
             showMessage('✓ Submitted successfully!'); 
             resetForm(); 
-        }
-        catch(e) { 
+        } catch(e) { 
             showMessage('Error submitting', true); 
             isSubmitting = false; 
             render(); 
