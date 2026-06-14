@@ -192,6 +192,29 @@
             font-size: 12px;
             margin-bottom: 4px;
         }
+        .thankyou-message {
+            text-align: center;
+            padding: 40px 20px;
+            background: #d4edda;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .thankyou-message h2 {
+            background: none;
+            color: #155724;
+            font-size: 28px;
+            margin: 0 0 10px 0;
+            padding: 0;
+        }
+        .thankyou-message p {
+            color: #155724;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        .thankyou-message button {
+            margin-top: 20px;
+            background: #155724;
+        }
         hr {
             margin: 20px 0;
         }
@@ -212,7 +235,7 @@
     // ============================================
     // GOOGLE APPS SCRIPT WEB APP URL - UPDATED
     // ============================================
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz0I9V7AfwLz2Z4j7E82JD7Rq--ZOaZ8yRxEZYV1O99_eiHEPlevFszxfiaLf6EXc07Aw/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyqnUJRtLSrX7boOlpyRNeHwzWxgt6UzSMPvYDuSIjglgQYh0q65r3vQJbp_5tWCHQoOw/exec';
     
     const DEFAULT_YEARLY_TUITION = 3500000;
     const DEFAULT_YEARLY_OTHER_COSTS = 5000000;
@@ -221,6 +244,7 @@
     // STATE
     // ============================================
     let currentStep = 1;
+    let showThankYou = false;
     let staffInfo = {};
     let longTermTrainings = [];
     let shortTermTrainings = [];
@@ -259,7 +283,6 @@
     function calculateYearlyCosts(months, yearlyTuition, yearlyOther, startYear) {
         const yearlyCost = yearlyTuition + yearlyOther;
         const results = [];
-        const startYearNum = parseInt(startYear);
         let remainingMonths = months;
         let yearIndex = 0;
         while (remainingMonths > 0 && yearIndex < 4) {
@@ -331,6 +354,23 @@
     function render() {
         const container = document.getElementById('formContent');
         if (!container) return;
+        
+        // Show Thank You page if submission was successful
+        if (showThankYou) {
+            container.innerHTML = `
+                <div class="thankyou-message">
+                    <h2>✅ Thank You!</h2>
+                    <p>Your training needs assessment has been successfully submitted.</p>
+                    <p>The HR department will review your request and contact you if additional information is needed.</p>
+                    <p><strong>Reference Number:</strong> ${new Date().getTime().toString().slice(-8)}</p>
+                    <hr>
+                    <p>Would you like to submit another assessment?</p>
+                    <button onclick="startNewForm()">Start New Form</button>
+                </div>
+            `;
+            return;
+        }
+        
         let html = '';
         
         // STEP 1: Staff Information
@@ -420,7 +460,7 @@
             html += `<h3>${isAcademic ? 'ACADEMIC STAFF' : 'ADMINISTRATIVE & TECHNICAL STAFF'}</h3>`;
             
             if (entries.length > 0) {
-                html += `<table><thead><tr>
+                html += `<table><thead>；
                     <th>S/N</th><th>Name</th><th>Gender</th><th>Position</th><th>Course</th>
                     <th>Institution</th><th>Sponsor</th><th>Duration(m)</th>
                     <th>Yearly Tuition</th><th>Yearly Other</th>
@@ -461,7 +501,7 @@
                         <td><button class="danger" onclick="removeDetailedEntry(${i}, ${isAcademic})" style="padding:2px 6px">✗</button></td>
                     </tr>`;
                 }
-                html += `</tbody></table>`;
+                html += `</tbody></td>`;
                 html += `<div class="button-group-left"><button class="add-btn" onclick="addDetailedEntry(${isAcademic})">+ Add Training</button></div>`;
                 html += `<div class="cost-summary"><strong>TOTAL COST FOR ${isAcademic ? 'ACADEMIC' : 'ADMINISTRATIVE & TECHNICAL'} STAFF:</strong> TZS ${Math.round(totalCost).toLocaleString()}</div>`;
             } else {
@@ -508,6 +548,17 @@
     function goToStep4() {
         refreshDetailedPlan();
         currentStep = 4;
+        render();
+    }
+    
+    function startNewForm() {
+        showThankYou = false;
+        currentStep = 1;
+        staffInfo = {};
+        longTermTrainings = [];
+        shortTermTrainings = [];
+        detailedLongTerm = { academic: [], adminTechnical: [] };
+        isSubmitting = false;
         render();
     }
     
@@ -592,10 +643,10 @@
         const payload = { staffInfo, longTermTrainings: [], shortTermTrainings, detailedLongTerm: { academic: [], adminTechnical: [] }, submittedAt: new Date().toISOString() };
         try { 
             await fetch(WEB_APP_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) }); 
-            showMessage('✓ Submitted successfully!'); 
-            resetForm(); 
+            showThankYou = true;
+            render();
         } catch(e) { 
-            showMessage('Error submitting', true); 
+            showMessage('Error submitting. Please try again.', true); 
             isSubmitting = false; 
             render(); 
         }
@@ -607,23 +658,13 @@
         const payload = { staffInfo, longTermTrainings, shortTermTrainings, detailedLongTerm, submittedAt: new Date().toISOString() };
         try { 
             await fetch(WEB_APP_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) }); 
-            showMessage('✓ Submitted successfully!'); 
-            resetForm(); 
+            showThankYou = true;
+            render();
         } catch(e) { 
-            showMessage('Error submitting', true); 
+            showMessage('Error submitting. Please try again.', true); 
             isSubmitting = false; 
             render(); 
         }
-    }
-    
-    function resetForm() {
-        currentStep = 1; 
-        staffInfo = {}; 
-        longTermTrainings = []; 
-        shortTermTrainings = []; 
-        detailedLongTerm = { academic: [], adminTechnical: [] }; 
-        isSubmitting = false;
-        render();
     }
     
     render();
