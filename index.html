@@ -233,7 +233,8 @@
 
 <script>
     // ============================================
-    // GOOGLE APPS SCRIPT WEB APP URL - UPDATED
+    // GOOGLE APPS SCRIPT WEB APP URL
+    // REPLACE WITH YOUR ACTUAL WEB APP URL
     // ============================================
     const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyqnUJRtLSrX7boOlpyRNeHwzWxgt6UzSMPvYDuSIjglgQYh0q65r3vQJbp_5tWCHQoOw/exec';
     
@@ -283,6 +284,7 @@
     function calculateYearlyCosts(months, yearlyTuition, yearlyOther, startYear) {
         const yearlyCost = yearlyTuition + yearlyOther;
         const results = [];
+        const startYearNum = parseInt(startYear);
         let remainingMonths = months;
         let yearIndex = 0;
         while (remainingMonths > 0 && yearIndex < 4) {
@@ -501,7 +503,7 @@
                         <td><button class="danger" onclick="removeDetailedEntry(${i}, ${isAcademic})" style="padding:2px 6px">✗</button></td>
                     </tr>`;
                 }
-                html += `</tbody></td>`;
+                html += `</tbody></table>`;
                 html += `<div class="button-group-left"><button class="add-btn" onclick="addDetailedEntry(${isAcademic})">+ Add Training</button></div>`;
                 html += `<div class="cost-summary"><strong>TOTAL COST FOR ${isAcademic ? 'ACADEMIC' : 'ADMINISTRATIVE & TECHNICAL'} STAFF:</strong> TZS ${Math.round(totalCost).toLocaleString()}</div>`;
             } else {
