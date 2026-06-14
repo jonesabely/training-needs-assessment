@@ -210,9 +210,9 @@
 
 <script>
     // ============================================
-    // GOOGLE APPS SCRIPT WEB APP URL
+    // GOOGLE APPS SCRIPT WEB APP URL - UPDATED
     // ============================================
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwt6swyQz2N3PXIwm7hzi9tGl-Kst2RDUFqhLPqYkEfjIxlJR7pDyxs7Z_y-d4FANdC/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxBQxWNC2-bFTjEtzNEMc8cg3n0INm8bicXeF-VNn-0MayN40UaIsQc-HGreoNQb5dlOA/exec';
     
     const DEFAULT_YEARLY_TUITION = 3500000;
     const DEFAULT_YEARLY_OTHER_COSTS = 5000000;
@@ -343,7 +343,7 @@
             html += `<div class="button-group"><button onclick="saveStep1()">Next →</button></div>`;
         }
         
-        // STEP 2: Long-Term Training (Card layout for better arrangement)
+        // STEP 2: Long-Term Training
         else if (currentStep === 2) {
             html += `<h2>📚 LONG-TERM TRAINING NEEDS</h2>`;
             html += `<div class="info-banner">⚠️ Select ONLY ONE start year per training. Duration in months is required.</div>`;
@@ -420,13 +420,13 @@
             html += `<h3>${isAcademic ? 'ACADEMIC STAFF' : 'ADMINISTRATIVE & TECHNICAL STAFF'}</h3>`;
             
             if (entries.length > 0) {
-                html += `<table><thead>；
+                html += `<table><thead><tr>
                     <th>S/N</th><th>Name</th><th>Gender</th><th>Position</th><th>Course</th>
                     <th>Institution</th><th>Sponsor</th><th>Duration(m)</th>
                     <th>Yearly Tuition</th><th>Yearly Other</th>
                     <th>Year 1</th><th>Year 2</th><th>Year 3</th><th>Year 4</th>
                     <th>Total</th><th>Start Year</th><th>Remarks</th><th></th>
-                </table></thead><tbody>`;
+                </tr></thead><tbody>`;
                 
                 let totalCost = 0;
                 for (let i = 0; i < entries.length; i++) {
