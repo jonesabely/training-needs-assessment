@@ -13,7 +13,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 1300px;
+            max-width: 1400px;
             margin: 0 auto;
             background: white;
             border-radius: 16px;
@@ -71,11 +71,13 @@
             width: 100%;
             border-collapse: collapse;
             margin: 15px 0;
-            font-size: 13px;
+            font-size: 12px;
+            overflow-x: auto;
+            display: block;
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 10px;
+            padding: 8px;
             text-align: left;
             vertical-align: top;
         }
@@ -83,6 +85,8 @@
             background: #1a73e8;
             color: white;
             font-weight: 600;
+            position: sticky;
+            top: 0;
         }
         tr:nth-child(even) {
             background: #f9f9f9;
@@ -218,14 +222,9 @@
         hr {
             margin: 20px 0;
         }
-        .required-field {
-            color: #dc3545;
-            font-size: 12px;
-            margin-top: 4px;
-        }
         @media (max-width: 768px) {
             .container { padding: 15px; }
-            th, td { font-size: 11px; padding: 6px; }
+            th, td { font-size: 10px; padding: 4px; }
             .training-row { flex-direction: column; }
         }
     </style>
@@ -240,7 +239,10 @@
     // ============================================
     // GOOGLE APPS SCRIPT WEB APP URL
     // ============================================
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzTZqAefRsZPoSZwU9lS2X7YCYZZgv7nNKfAKN1Ti5TDzF7aQgPSfBxmIgrRFumA3Jj1w/exec';
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyqnUJRtLSrX7boOlpyRNeHwzWxgt6UzSMPvYDuSIjglgQYh0q65r3vQJbp_5tWCHQoOw/exec';
+    
+    const DEFAULT_YEARLY_TUITION = 3500000;
+    const DEFAULT_YEARLY_OTHER_COSTS = 5000000;
     
     // ============================================
     // STATE
@@ -263,6 +265,9 @@
         'Leadership & Management', 'Customer Care', 'Other'
     ];
     
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
     function escapeHtml(str) {
         if (!str) return '';
         return String(str).replace(/[&<>]/g, function(m) {
@@ -271,6 +276,18 @@
             if (m === '>') return '&gt;';
             return m;
         });
+    }
+    
+    function formatNumberWithCommas(x) {
+        if (x === '' || x === null || x === undefined) return '';
+        let num = parseFloat(String(x).replace(/,/g, ''));
+        if (isNaN(num)) return x;
+        return num.toLocaleString('en-US');
+    }
+    
+    function parseCommaNumber(str) {
+        if (!str) return '';
+        return str.replace(/,/g, '');
     }
     
     function showMessage(msg, isError = false) {
@@ -335,12 +352,12 @@
                 showMessage(`Detailed Training #${i+1}: Please enter Institution`, true);
                 return false;
             }
-            if (!e.yearlyTuition || parseFloat(e.yearlyTuition) <= 0) {
-                showMessage(`Detailed Training #${i+1}: Please enter Yearly Tuition Amount`, true);
+            if (e.yearlyTuition === '' || e.yearlyTuition === null || e.yearlyTuition === undefined) {
+                showMessage(`Detailed Training #${i+1}: Please enter Yearly Tuition Amount (enter 0 if none)`, true);
                 return false;
             }
-            if (!e.yearlyOther || parseFloat(e.yearlyOther) <= 0) {
-                showMessage(`Detailed Training #${i+1}: Please enter Yearly Other Costs (Travel, Living, Research, etc.)`, true);
+            if (e.yearlyOther === '' || e.yearlyOther === null || e.yearlyOther === undefined) {
+                showMessage(`Detailed Training #${i+1}: Please enter Yearly Other Costs (enter 0 if none)`, true);
                 return false;
             }
         }
@@ -377,7 +394,7 @@
     }
     
     // ============================================
-    // UPDATE FUNCTIONS (no re-render)
+    // UPDATE FUNCTIONS
     // ============================================
     function updateDetailedEntryField(index, field, value, isAcademic) {
         if (isAcademic) {
@@ -389,7 +406,6 @@
                 detailedLongTerm.adminTechnical[index][field] = value;
             }
         }
-        // Update the displayed total cost without full re-render
         updateDetailedRowDisplay(index, isAcademic);
     }
     
@@ -403,22 +419,39 @@
         const costs = calculateYearlyCosts(months, yTuition, yOther, entry.year || '2026');
         const rowTotal = costs.reduce((s, c) => s + c.cost, 0);
         
-        // Find the total cell and update it
         const totalCell = document.getElementById(`total_${isAcademic}_${index}`);
         if (totalCell) {
-            totalCell.innerText = (yTuition > 0 && yOther > 0) ? Math.round(rowTotal).toLocaleString() : '-';
+            totalCell.innerText = Math.round(rowTotal).toLocaleString();
         }
         
-        // Update year cost cells
         for (let y = 0; y < 4; y++) {
             const yearCell = document.getElementById(`year_${isAcademic}_${index}_${y}`);
             if (yearCell) {
-                if (y < costs.length && yTuition > 0 && yOther > 0) {
+                if (y < costs.length) {
                     yearCell.innerHTML = `${Math.round(costs[y].cost).toLocaleString()}<br><small>Year ${y+1}</small>`;
                 } else {
                     yearCell.innerHTML = '-';
                 }
             }
+        }
+        
+        updateGrandTotal(isAcademic);
+    }
+    
+    function updateGrandTotal(isAcademic) {
+        const entries = isAcademic ? detailedLongTerm.academic : detailedLongTerm.adminTechnical;
+        let totalCost = 0;
+        for (let i = 0; i < entries.length; i++) {
+            const e = entries[i];
+            const months = parseInt(e.duration) || 0;
+            const yTuition = parseFloat(e.yearlyTuition) || 0;
+            const yOther = parseFloat(e.yearlyOther) || 0;
+            const costs = calculateYearlyCosts(months, yTuition, yOther, e.year || '2026');
+            totalCost += costs.reduce((s, c) => s + c.cost, 0);
+        }
+        const grandTotalSpan = document.getElementById('grandTotal');
+        if (grandTotalSpan) {
+            grandTotalSpan.innerText = Math.round(totalCost).toLocaleString();
         }
     }
     
@@ -525,7 +558,6 @@
                 return;
             }
             
-            // Only refresh detailed plan if it's empty
             const isAcademic = (staffInfo.category === 'Academic Staff');
             const currentEntries = isAcademic ? detailedLongTerm.academic : detailedLongTerm.adminTechnical;
             if (currentEntries.length === 0) {
@@ -535,7 +567,7 @@
             const entries = isAcademic ? detailedLongTerm.academic : detailedLongTerm.adminTechnical;
             
             html += `<h2>💰 DETAILED FINANCIAL PLAN</h2>`;
-            html += `<div class="info-banner">⚠️ Please fill in ALL financial details below. Tuition and Other Costs are required.</div>`;
+            html += `<div class="info-banner">⚠️ Please fill in ALL financial details below. Enter 0 if no cost (e.g., PostDoc, Fellowship).</div>`;
             html += `<h3>${isAcademic ? 'ACADEMIC STAFF' : 'ADMINISTRATIVE & TECHNICAL STAFF'}</h3>`;
             
             if (entries.length > 0) {
@@ -567,18 +599,18 @@
                         <td><input type="text" value="${escapeHtml(a.institution)}" onchange="updateDetailedEntryField(${i}, 'institution', this.value, ${isAcademic})" placeholder="Required" style="width:90px"></td>
                         <td><select onchange="updateDetailedEntryField(${i}, 'sponsor', this.value, ${isAcademic})"><option ${a.sponsor === 'UDSM' ? 'selected' : ''}>UDSM</option><option ${a.sponsor === 'NIF' ? 'selected' : ''}>NIF</option><option ${a.sponsor === 'Secure D' ? 'selected' : ''}>Secure D</option><option ${a.sponsor === 'Other' ? 'selected' : ''}>Other</option></select></td>
                         <td><input type="number" value="${a.duration || ''}" readonly style="width:60px"></td>
-                        <td><input type="number" value="${a.yearlyTuition || ''}" onchange="updateDetailedEntryField(${i}, 'yearlyTuition', this.value, ${isAcademic})" placeholder="Required" style="width:100px"></td>
-                        <td><input type="number" value="${a.yearlyOther || ''}" onchange="updateDetailedEntryField(${i}, 'yearlyOther', this.value, ${isAcademic})" placeholder="Required" style="width:100px"></td>`;
+                        <td><input type="text" value="${formatNumberWithCommas(a.yearlyTuition)}" onchange="updateDetailedEntryField(${i}, 'yearlyTuition', parseCommaNumber(this.value), ${isAcademic}); this.value = formatNumberWithCommas(this.value)" placeholder="0" style="width:100px"></td>
+                        <td><input type="text" value="${formatNumberWithCommas(a.yearlyOther)}" onchange="updateDetailedEntryField(${i}, 'yearlyOther', parseCommaNumber(this.value), ${isAcademic}); this.value = formatNumberWithCommas(this.value)" placeholder="0" style="width:100px"></td>`;
                     
                     for (let y = 0; y < 4; y++) {
-                        if (y < costs.length && yTuition > 0 && yOther > 0) {
+                        if (y < costs.length) {
                             html += `<td id="year_${isAcademic}_${i}_${y}">${Math.round(costs[y].cost).toLocaleString()}<br><small>Year ${y+1}</small></td>`;
                         } else {
                             html += `<td id="year_${isAcademic}_${i}_${y}">-</td>`;
                         }
                     }
                     
-                    html += `<td id="total_${isAcademic}_${i}"><strong>${yTuition > 0 && yOther > 0 ? Math.round(rowTotal).toLocaleString() : '-'}</strong></td>
+                    html += `<td id="total_${isAcademic}_${i}"><strong>${Math.round(rowTotal).toLocaleString()}</strong></td>
                         <td><input type="text" value="${escapeHtml(a.year)}" readonly style="width:70px"></td>
                         <td><input type="text" value="${escapeHtml(a.remarks)}" onchange="updateDetailedEntryField(${i}, 'remarks', this.value, ${isAcademic})" placeholder="Optional" style="width:80px"></td>
                         <td><button class="danger" onclick="removeDetailedEntry(${i}, ${isAcademic})" style="padding:2px 6px">✗</button></td>
@@ -586,7 +618,7 @@
                 }
                 html += `</tbody></table>`;
                 html += `<div class="button-group-left"><button class="add-btn" onclick="addDetailedEntry(${isAcademic})">+ Add Training</button></div>`;
-                html += `<div class="cost-summary"><strong>TOTAL COST FOR ${isAcademic ? 'ACADEMIC' : 'ADMINISTRATIVE & TECHNICAL'} STAFF:</strong> TZS <span id="grandTotal">${totalCost.toLocaleString()}</span></div>`;
+                html += `<div class="cost-summary"><strong>TOTAL COST FOR ${isAcademic ? 'ACADEMIC' : 'ADMINISTRATIVE & TECHNICAL'} STAFF:</strong> TZS <span id="grandTotal">${Math.round(totalCost).toLocaleString()}</span></div>`;
             } else {
                 html += `<div class="info-banner">No training records found. Please go back to add trainings.</div>`;
             }
