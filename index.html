@@ -222,6 +222,9 @@
         hr {
             margin: 20px 0;
         }
+        .other-input {
+            margin-top: 10px;
+        }
         @media (max-width: 768px) {
             .container { padding: 15px; }
             th, td { font-size: 10px; padding: 4px; }
@@ -239,10 +242,7 @@
     // ============================================
     // GOOGLE APPS SCRIPT WEB APP URL
     // ============================================
-    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyqnUJRtLSrX7boOlpyRNeHwzWxgt6UzSMPvYDuSIjglgQYh0q65r3vQJbp_5tWCHQoOw/exec';
-    
-    const DEFAULT_YEARLY_TUITION = 3500000;
-    const DEFAULT_YEARLY_OTHER_COSTS = 5000000;
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzTZqAefRsZPoSZwU9lS2X7YCYZZgv7nNKfAKN1Ti5TDzF7aQgPSfBxmIgrRFumA3Jj1w/exec';
     
     // ============================================
     // STATE
@@ -315,11 +315,22 @@
         return results;
     }
     
+    function getEffectiveTrainingArea(training) {
+        if (training.area === 'Other' && training.otherSpecify && training.otherSpecify.trim() !== '') {
+            return training.otherSpecify.trim();
+        }
+        return training.area;
+    }
+    
     function validateLongTermTrainings() {
         for (let i = 0; i < longTermTrainings.length; i++) {
             const t = longTermTrainings[i];
             if (!t.area) {
                 showMessage(`Training #${i+1}: Please select a Training Area`, true);
+                return false;
+            }
+            if (t.area === 'Other' && (!t.otherSpecify || t.otherSpecify.trim() === '')) {
+                showMessage(`Training #${i+1}: Please specify what "Other" training area means`, true);
                 return false;
             }
             if (!t.duration || t.duration <= 0) {
@@ -372,11 +383,13 @@
         
         for (let training of longTermTrainings) {
             if (!training.area) continue;
+            const effectiveArea = getEffectiveTrainingArea(training);
+            
             const entry = {
                 name: staffInfo.name || '',
                 gender: staffInfo.gender === 'Male' ? 'M' : 'F',
                 position: staffInfo.position || '',
-                course: training.area,
+                course: effectiveArea,
                 institution: '',
                 sponsor: 'UDSM',
                 duration: training.duration || 24,
@@ -496,10 +509,16 @@
             
             for (let i = 0; i < longTermTrainings.length; i++) {
                 const t = longTermTrainings[i];
+                const showOtherInput = (t.area === 'Other');
                 html += `<div class="training-card">`;
                 html += `<div class="training-header">Training #${i+1}</div>`;
                 html += `<div class="training-row">`;
-                html += `<div class="field"><label>Training Area *</label><input type="text" value="${escapeHtml(t.area)}" onchange="updateLongTerm(${i}, 'area', this.value)" list="longTermList" style="width:100%"><datalist id="longTermList">${longTermAreas.map(a => `<option>${a}</option>`).join('')}</datalist></div>`;
+                html += `<div class="field"><label>Training Area *</label><select onchange="updateLongTerm(${i}, 'area', this.value); updateLongTermOtherInput(${i})" style="width:100%">`;
+                html += `<option value="">Select</option>`;
+                for (let area of longTermAreas) {
+                    html += `<option value="${area}" ${t.area === area ? 'selected' : ''}>${area}</option>`;
+                }
+                html += `</select></div>`;
                 html += `<div class="field"><label>Duration (Months) *</label><input type="number" value="${t.duration || ''}" onchange="updateLongTerm(${i}, 'duration', this.value)" placeholder="e.g., 24" style="width:100%"></div>`;
                 html += `</div><div class="training-row">`;
                 html += `<div class="field"><label>Start Year (Select ONE) *</label><div class="radio-group">`;
@@ -508,7 +527,13 @@
                 html += `<label><input type="radio" name="year_${i}" value="2028" ${t.startYear === '2028' ? 'checked' : ''} onchange="updateLongTermStartYear(${i}, '2028')"> 2028/29</label>`;
                 html += `</div></div>`;
                 html += `<div class="field"><label>Expected Outcome *</label><input type="text" value="${escapeHtml(t.outcome)}" onchange="updateLongTerm(${i}, 'outcome', this.value)" placeholder="What will you achieve?" style="width:100%"></div>`;
-                html += `</div><div class="training-row">`;
+                html += `</div>`;
+                if (showOtherInput) {
+                    html += `<div class="training-row other-input">`;
+                    html += `<div class="field"><label>Please specify "Other" Training Area *</label><input type="text" value="${escapeHtml(t.otherSpecify || '')}" onchange="updateLongTerm(${i}, 'otherSpecify', this.value)" placeholder="e.g., Professional Certification, Executive MBA" style="width:100%"></div>`;
+                    html += `</div>`;
+                }
+                html += `<div class="training-row">`;
                 html += `<div class="field"><label>Remarks</label><input type="text" value="${escapeHtml(t.remarks)}" onchange="updateLongTerm(${i}, 'remarks', this.value)" placeholder="Optional" style="width:100%"></div>`;
                 html += `<div class="field"><button class="danger" onclick="removeLongTerm(${i})" style="margin-top:22px">✗ Remove</button></div>`;
                 html += `</div></div>`;
@@ -525,10 +550,16 @@
             
             for (let i = 0; i < shortTermTrainings.length; i++) {
                 const t = shortTermTrainings[i];
+                const showOtherInput = (t.area === 'Other');
                 html += `<div class="training-card">`;
                 html += `<div class="training-header">Training #${i+1}</div>`;
                 html += `<div class="training-row">`;
-                html += `<div class="field"><label>Training Area *</label><input type="text" value="${escapeHtml(t.area)}" onchange="updateShortTerm(${i}, 'area', this.value)" list="shortTermList" style="width:100%"><datalist id="shortTermList">${shortTermAreas.map(a => `<option>${a}</option>`).join('')}</datalist></div>`;
+                html += `<div class="field"><label>Training Area *</label><select onchange="updateShortTerm(${i}, 'area', this.value); updateShortTermOtherInput(${i})" style="width:100%">`;
+                html += `<option value="">Select</option>`;
+                for (let area of shortTermAreas) {
+                    html += `<option value="${area}" ${t.area === area ? 'selected' : ''}>${area}</option>`;
+                }
+                html += `</select></div>`;
                 html += `<div class="field"><label>Select Years (can select multiple)</label><div class="radio-group">`;
                 html += `<label><input type="checkbox" ${t.y2026 ? 'checked' : ''} onchange="updateShortTerm(${i}, 'y2026', this.checked)"> 2026/27</label>`;
                 html += `<label><input type="checkbox" ${t.y2027 ? 'checked' : ''} onchange="updateShortTerm(${i}, 'y2027', this.checked)"> 2027/28</label>`;
@@ -536,6 +567,13 @@
                 html += `</div></div>`;
                 html += `</div><div class="training-row">`;
                 html += `<div class="field"><label>Expected Outcome *</label><input type="text" value="${escapeHtml(t.outcome)}" onchange="updateShortTerm(${i}, 'outcome', this.value)" placeholder="What will you achieve?" style="width:100%"></div>`;
+                html += `</div>`;
+                if (showOtherInput) {
+                    html += `<div class="training-row other-input">`;
+                    html += `<div class="field"><label>Please specify "Other" Training Area *</label><input type="text" value="${escapeHtml(t.otherSpecify || '')}" onchange="updateShortTerm(${i}, 'otherSpecify', this.value)" placeholder="e.g., Project Management, Public Speaking" style="width:100%"></div>`;
+                    html += `</div>`;
+                }
+                html += `<div class="training-row">`;
                 html += `<div class="field"><label>Remarks</label><input type="text" value="${escapeHtml(t.remarks)}" onchange="updateShortTerm(${i}, 'remarks', this.value)" placeholder="Optional" style="width:100%"></div>`;
                 html += `<div class="field"><button class="danger" onclick="removeShortTerm(${i})" style="margin-top:22px">✗ Remove</button></div>`;
                 html += `</div></div>`;
@@ -572,7 +610,7 @@
             
             if (entries.length > 0) {
                 html += `<table id="detailedTable">`;
-                html += `<thead><tr>
+                html += `<thead>；
                     <th>S/N</th><th>Name</th><th>Gender</th><th>Position</th><th>Course/Programme *</th>
                     <th>Institution *</th><th>Sponsor</th><th>Duration(m)</th>
                     <th>Yearly Tuition (TZS) *</th><th>Yearly Other Costs (TZS) *</th>
@@ -660,6 +698,7 @@
     }
     
     function goToStep4() {
+        refreshDetailedPlan();
         currentStep = 4;
         render();
     }
@@ -676,30 +715,44 @@
     }
     
     function addLongTermRow() {
-        longTermTrainings.push({ area: '', startYear: '', duration: '', outcome: '', remarks: '' });
+        longTermTrainings.push({ area: '', otherSpecify: '', startYear: '', duration: '', outcome: '', remarks: '' });
         render();
     }
     
     function updateLongTerm(index, field, value) {
         longTermTrainings[index][field] = value;
+        if (field === 'area' || field === 'otherSpecify') {
+            refreshDetailedPlan();
+        }
+    }
+    
+    function updateLongTermOtherInput(index) {
+        const showOther = (longTermTrainings[index].area === 'Other');
+        render();
     }
     
     function updateLongTermStartYear(index, year) {
         longTermTrainings[index].startYear = year;
+        refreshDetailedPlan();
     }
     
     function removeLongTerm(index) {
         longTermTrainings.splice(index, 1);
+        refreshDetailedPlan();
         render();
     }
     
     function addShortTermRow() {
-        shortTermTrainings.push({ area: '', y2026: false, y2027: false, y2028: false, outcome: '', remarks: '' });
+        shortTermTrainings.push({ area: '', otherSpecify: '', y2026: false, y2027: false, y2028: false, outcome: '', remarks: '' });
         render();
     }
     
     function updateShortTerm(index, field, value) {
         shortTermTrainings[index][field] = value;
+    }
+    
+    function updateShortTermOtherInput(index) {
+        render();
     }
     
     function removeShortTerm(index) {
